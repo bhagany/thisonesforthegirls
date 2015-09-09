@@ -1,9 +1,7 @@
 (ns thisonesforthegirls.util
-  (:require [cljs.core.async :refer [put! <!]]
-            [cljs.nodejs :as node]
+  (:require [cljs.nodejs :as node]
             [datascript :as d]
-            [thisonesforthegirls.db :as db])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [goog.object]))
 
 
 (defn get-secret
