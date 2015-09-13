@@ -22,7 +22,7 @@
   (async-lambda-fn
    (fn [event context]
      (let [{:keys [username password]} event
-           bcrypt (node/require "bcrypt")
+           bcrypt (node/require "bcryptjs")
            hashed (.hashSync bcrypt password 10)
            conn-ch (db/get-conn-ch db-bucket db-key schema)]
        (go
@@ -62,7 +62,7 @@
    (fn [event context]
      (let [conn-ch (db/get-conn-ch db-bucket db-key schema)
            {:keys [username password]} event
-           bcrypt (node/require "bcrypt")]
+           bcrypt (node/require "bcryptjs")]
        (go
          (let [conn (<! conn-ch)
                db @conn

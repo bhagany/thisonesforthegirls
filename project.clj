@@ -2,7 +2,7 @@
   :description "FIXME"
   :url "http://please.FIXME"
   :dependencies [[com.cognitect/transit-cljs "0.8.225"]
-                 [datascript "0.11.6"]
+                 [datascript "0.12.1"]
                  [hiccups "0.3.0"]
                  [io.nervous/cljs-lambda "0.1.2"]
                  [org.clojure/clojure "1.7.0"]
@@ -14,7 +14,7 @@
             [io.nervous/lein-cljs-lambda "0.2.4"]]
 
   :npm {:dependencies [[aws-sdk "2.1.50"]
-                       [bcrypt "0.8.5"]
+                       [bcryptjs "2.2.1"]
                        [jsonwebtoken "5.0.5"]
                        [source-map-support "0.3.2"]]}
 
