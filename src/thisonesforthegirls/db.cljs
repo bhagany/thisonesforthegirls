@@ -1,47 +1,28 @@
 (ns thisonesforthegirls.db
   (:require [cljs.nodejs :as node]
-            [cognitect.transit :as transit]
             [cljs.core.async :refer [chan pipe >! close!]]
+            [cognitect.transit :as transit]
             [datascript :as d]
-            [datascript.core :refer [Datom]]
             [datascript.btset :refer [Iter]]
+            [datascript.transit :as dt]
             [goog.object])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def aws (node/require "aws-sdk"))
 (def s3 (aws.S3.))
 
-(deftype DatomHandler []
-  Object
-  (tag [_ _] "datascript/Datom")
-  (rep [_ d] #js [(.-e d) (.-a d) (.-v d) (.-tx d)])
-  (stringRep [_ _] nil))
+(def my-write-handlers (assoc dt/write-handlers Iter (transit/ListHandler.)))
 
-(def datascript-transit-reader
-  (transit/reader :json
-                  {:handlers {"datascript/Datom" (fn [[e a v tx]]
-                                                   (d/datom e a v tx))}}))
-
-(def datascript-transit-writer
-  (transit/writer :json
-                  {:handlers {Datom (DatomHandler.)
-                              Iter (transit/VectorHandler.)}}))
-
-(defn string->data
-  [s]
-  (transit/read datascript-transit-reader s))
-
-(defn data->string
-  [data]
-  (transit/write datascript-transit-writer data))
+(defn write-transit-str [o]
+  (transit/write (transit/writer :json {:handlers my-write-handlers}) o))
 
 (defn string->db
   [s schema]
-  (d/init-db (string->data s) schema))
+  (d/init-db (dt/read-transit-str s) schema))
 
 (defn db->string
   [db]
-  (data->string (d/datoms db :eavt)))
+  (write-transit-str (d/datoms db :eavt)))
 
 (defn get-obj-ch
   [bucket key-name]
