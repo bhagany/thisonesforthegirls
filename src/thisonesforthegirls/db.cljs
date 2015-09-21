@@ -5,11 +5,9 @@
             [datascript.btset :refer [Iter]]
             [datascript.core :as d]
             [datascript.transit :as dt]
-            [goog.object])
+            [thisonesforthegirls.util :as u])
+  (:import [goog.object])
   (:require-macros [cljs.core.async.macros :refer [go]]))
-
-(def aws (node/require "aws-sdk"))
-(def s3 (aws.S3.))
 
 (def my-write-handlers (assoc dt/write-handlers Iter (transit/ListHandler.)))
 
@@ -24,31 +22,6 @@
   [db]
   (write-transit-str (d/datoms db :eavt)))
 
-(defn get-obj-ch
-  [bucket key-name]
-  (let [ch (chan)]
-    (.getObject s3
-                #js {:Bucket bucket
-                     :Key key-name}
-                (fn [err obj]
-                  (go
-                    (>! ch [err obj])
-                    (close! ch))))
-    ch))
-
-(defn put-obj!-ch
-  [body bucket key-name]
-  (let [ch (chan)]
-    (.putObject s3
-                #js {:Bucket bucket
-                     :Key key-name
-                     :Body body}
-                (fn [err obj]
-                  (go
-                    (>! ch [err obj])
-                    (close! ch))))
-    ch))
-
 (defn s3-obj->conn
   [schema]
   (fn [[err obj]]
@@ -61,13 +34,13 @@
 (defn get-conn-ch
   [bucket key-name schema]
   (let [ch (chan 1 (map (s3-obj->conn schema)))]
-    (pipe (get-obj-ch bucket key-name) ch)
+    (pipe (u/get-obj-ch bucket key-name) ch)
     ch))
 
 (defn persist!-ch
   [db bucket key-name]
   (let [body (db->string db)]
-    (put-obj!-ch body bucket key-name)))
+    (u/put-obj!-ch body bucket key-name)))
 
 (defn transact!-ch
   [conn tx-data bucket key-name]

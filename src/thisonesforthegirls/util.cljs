@@ -3,6 +3,33 @@
             [datascript.core :as d])
   (:import [goog.object]))
 
+(def aws (node/require "aws-sdk"))
+(def s3 (aws.S3.))
+
+(defn get-obj-ch
+  [bucket key-name]
+  (let [ch (chan)]
+    (.getObject s3
+                #js {:Bucket bucket
+                     :Key key-name}
+                (fn [err obj]
+                  (go
+                    (>! ch [err obj])
+                    (close! ch))))
+    ch))
+
+(defn put-obj!-ch
+  [body bucket key-name]
+  (let [ch (chan)]
+    (.putObject s3
+                #js {:Bucket bucket
+                     :Key key-name
+                     :Body body}
+                (fn [err obj]
+                  (go
+                    (>! ch [err obj])
+                    (close! ch))))
+    ch))
 
 (defn get-secret
   [db]
