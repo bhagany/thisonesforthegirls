@@ -27,7 +27,7 @@
   (let [jwt (node/require "jsonwebtoken")
         secret (get-secret db)]
     (try
-      (-> (.verify jwt token secret)
+      (-> (.verify jwt token secret #js {:algorithms ["HS512"]})
           (goog.object/get "admin"))
       (catch (goog.object/get jwt "JsonWebTokenError") e
         (throw (js/Error. "Error checking login token"))))))
