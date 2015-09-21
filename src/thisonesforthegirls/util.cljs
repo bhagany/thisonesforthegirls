@@ -1,6 +1,8 @@
 (ns thisonesforthegirls.util
-  (:require [cljs.nodejs :as node]
+  (:require [cljs.core.async :refer [chan >! close!]]
+            [cljs.nodejs :as node]
             [datascript.core :as d])
+  (:require-macros [cljs.core.async.macros :refer [go]])
   (:import [goog.object]))
 
 (def aws (node/require "aws-sdk"))

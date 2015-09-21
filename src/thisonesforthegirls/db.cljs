@@ -1,13 +1,11 @@
 (ns thisonesforthegirls.db
-  (:require [cljs.nodejs :as node]
-            [cljs.core.async :refer [chan pipe >! close!]]
+  (:require [cljs.core.async :refer [chan pipe]]
             [cognitect.transit :as transit]
             [datascript.btset :refer [Iter]]
             [datascript.core :as d]
             [datascript.transit :as dt]
             [thisonesforthegirls.util :as u])
-  (:import [goog.object])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:import [goog.object]))
 
 (def my-write-handlers (assoc dt/write-handlers Iter (transit/ListHandler.)))
 
