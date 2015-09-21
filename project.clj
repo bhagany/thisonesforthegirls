@@ -22,6 +22,8 @@
 
   :source-paths ["src"]
 
+  :clean-targets ["out"]
+
   :cljs-lambda {:defaults {:role "arn:aws:iam::801085451725:role/thisonesforthegirls-lambda"}
                 :functions [{:name   "set-admin-creds"
                              :invoke thisonesforthegirls.core/set-admin-creds}
