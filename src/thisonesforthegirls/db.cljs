@@ -2,8 +2,8 @@
   (:require [cljs.nodejs :as node]
             [cljs.core.async :refer [chan pipe >! close!]]
             [cognitect.transit :as transit]
-            [datascript :as d]
             [datascript.btset :refer [Iter]]
+            [datascript.core :as d]
             [datascript.transit :as dt]
             [goog.object])
   (:require-macros [cljs.core.async.macros :refer [go]]))

@@ -1,7 +1,7 @@
 (ns thisonesforthegirls.util
   (:require [cljs.nodejs :as node]
-            [datascript :as d]
-            [goog.object]))
+            [datascript.core :as d])
+  (:import [goog.object]))
 
 
 (defn get-secret

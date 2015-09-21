@@ -2,8 +2,9 @@
   :description "FIXME"
   :url "http://please.FIXME"
   :dependencies [[com.cognitect/transit-cljs "0.8.225"]
-                 [datascript "0.12.1"]
-                 [datascript-transit "0.1.0" :exclusions [com.cognitect/transit-cljs]]
+                 [datascript "0.13.0"]
+                 [datascript-transit "0.2.0" :exclusions [com.cognitect/transit-clj
+                                                          com.cognitect/transit-cljs]]
                  [hiccups "0.3.0"]
                  [io.nervous/cljs-lambda "0.1.2"]
                  [org.clojure/clojure "1.7.0"]

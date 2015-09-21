@@ -2,7 +2,7 @@
   (:require [cljs.core.async :refer [<!]]
             [cljs-lambda.util :refer [async-lambda-fn]]
             [cljs.nodejs :as node]
-            [datascript :as d]
+            [datascript.core :as d]
             [thisonesforthegirls.db :as db]
             [thisonesforthegirls.util :as u])
   (:require-macros [cljs.core.async.macros :refer [go]]))
