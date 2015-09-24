@@ -57,14 +57,14 @@
            conn-ch (db/get-conn-ch db-bucket db-key schema)]
        (go
          (let [conn (<! conn-ch)
-               [err _] (<! (db/transact!-ch
-                            conn
-                            [{:db/id -1
-                              :db/ident :admin
-                              :user/name username
-                              :user/password hashed}]
-                            db-bucket
-                            db-key))]
+               [err] (<! (db/transact!-ch
+                          conn
+                          [{:db/id -1
+                            :db/ident :admin
+                            :user/name username
+                            :user/password hashed}]
+                          db-bucket
+                          db-key))]
            (if err
              (throw (js/Error. err))
              "Credentials set")))))))
@@ -76,13 +76,13 @@
            conn-ch (db/get-conn-ch db-bucket db-key schema)]
        (go
          (let [conn (<! conn-ch)
-               [err _] (<! (db/transact!-ch
-                            conn
-                            [{:db/id -1
-                              :db/ident :secret
-                              :secret secret}]
-                            db-bucket
-                            db-key))]
+               [err] (<! (db/transact!-ch
+                          conn
+                          [{:db/id -1
+                            :db/ident :secret
+                            :secret secret}]
+                          db-bucket
+                          db-key))]
            (if err
              (throw (js/Error. err))
              "Secret set")))))))
@@ -121,7 +121,7 @@
                                 )
                            merge)]
            (loop []
-             (let [[err _ :as val] (<! put-ch)]
+             (let [[err :as val] (<! put-ch)]
                (when err
                  (throw (js/Error. err)))
                (when-not (nil? val)
