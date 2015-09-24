@@ -30,7 +30,9 @@
                             {:name   "set-token-secret"
                              :invoke thisonesforthegirls.core/set-token-secret}
                             {:name   "login"
-                             :invoke thisonesforthegirls.core/login}]}
+                             :invoke thisonesforthegirls.core/login}
+                            {:name   "generate-all-pages"
+                             :invoke thisonesforthegirls.core/generate-all-pages}]}
 
   :cljsbuild {:builds [{:id "thisonesforthegirls"
                         :source-paths ["src"]
