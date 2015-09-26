@@ -31,7 +31,7 @@
               [:li [:a {:href "/devotions"} "Devotions"]]
               [:li [:a {:href "/scripture"} "Scripture"]]
               [:li [:a {:href "/testimonies"} "Testimonies"]]
-              [:li [:a {:href "/resournces"} "Community " [:span "Resources"]]]
+              [:li [:a {:href "/resources"} "Community " [:span "Resources"]]]
               [:li [:a {:href "/contact"} "Contact Us"]]]]
             [:div#navVines]
             [:div#navBottom]]]
