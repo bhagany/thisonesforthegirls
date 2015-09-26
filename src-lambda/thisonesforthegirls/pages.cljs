@@ -6,70 +6,78 @@
 
 
 (defn base-template
-  ([main-content]
-   (base-template main-content []))
-  ([main-content end-content]
+  ([title main-content]
+   (base-template title main-content []))
+  ([title main-content end-content]
    (let [year (.getYear (Date.))]
-     (html
-      [:html {:xmlns "http://www.w3.org/1999/xhtml"}
-       [:head
-        [:meta {:http-equiv "Content-Type" :content "text/html; charset=UTF-8"}]
-        [:meta {:http-equiv "Content-Language" :content "en-US"}]
-        [:link {:href "/assets/girls.css" :media "screen"
-                :rel "stylesheet" :type "text/css"}]]
-       (into
-        [:body
-         (into
-          [:div#wrapper
-           [:div#header]
-           [:div#navContainer
-            [:div#navTop]
-            [:div#nav
-             [:ul
-              [:li [:a {:href "/"} "Welcome"]]
-              [:li [:a {:href "/about"} "About Us"]]
-              [:li [:a {:href "/devotions"} "Devotions"]]
-              [:li [:a {:href "/scripture"} "Scripture"]]
-              [:li [:a {:href "/testimonies"} "Testimonies"]]
-              [:li [:a {:href "/resources"} "Community " [:span "Resources"]]]
-              [:li [:a {:href "/contact"} "Contact Us"]]]]
-            [:div#navVines]
-            [:div#navBottom]]]
-          (conj
-           main-content
-           [:div#footer
-            [:ul
-             [:li [:a {:href "/"} "Welcome"]]
-             [:li [:span.sep "|"] [:a {:href "/about"} "About Us"]]
-             [:li [:span.sep "|"] [:a {:href "/devotions"} "Devotions"]]
-             [:li [:span.sep "|"] [:a {:href "/scripture"} "Scripture"]]
-             [:li [:span.sep "|"] [:a {:href "/testimonies"} "Testimonies"]]
-             [:li [:span.sep "|"] [:a {:href "/resources"}
-                                   "Community Resources"]]
-             [:li [:span.sep "|"] [:a {:href "/contact"} "Contact Us"]]]
-            [:p (str "&copy; " year " - this One's for the girls")]]))]
-        end-content)]))))
+     (str "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\""
+          "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
+          (html
+           [:html {:xmlns "http://www.w3.org/1999/xhtml"}
+            [:head
+             [:title (str title " | This One's for the Girls")]
+             [:meta {:http-equiv "Content-Type"
+                     :content "text/html; charset=UTF-8"}]
+             [:meta {:http-equiv "Content-Language" :content "en-US"}]
+             [:link {:href "/assets/girls.css" :media "screen"
+                     :rel "stylesheet" :type "text/css"}]]
+            (into
+             [:body
+              (into
+               [:div#wrapper
+                [:div#header]
+                [:div#navContainer
+                 [:div#navTop]
+                 [:div#nav
+                  [:ul
+                   [:li [:a {:href "/"} "Welcome"]]
+                   [:li [:a {:href "/about"} "About Us"]]
+                   [:li [:a {:href "/devotions"} "Devotions"]]
+                   [:li [:a {:href "/scripture"} "Scripture"]]
+                   [:li [:a {:href "/testimonies"} "Testimonies"]]
+                   [:li [:a {:href "/resources"} "Community "
+                         [:span "Resources"]]]
+                   [:li [:a {:href "/contact"} "Contact Us"]]]]
+                 [:div#navVines]
+                 [:div#navBottom]]]
+               (conj
+                main-content
+                [:div#footer
+                 [:ul
+                  [:li [:a {:href "/"} "Welcome "]]
+                  [:li [:span.sep "|"] [:a {:href "/about"} " About Us "]]
+                  [:li [:span.sep "|"] [:a {:href "/devotions"} " Devotions "]]
+                  [:li [:span.sep "|"] [:a {:href "/scripture"} " Scripture "]]
+                  [:li [:span.sep "|"] [:a {:href "/testimonies"}
+                                        " Testimonies "]]
+                  [:li [:span.sep "|"] [:a {:href "/resources"}
+                                        " Community Resources "]]
+                  [:li [:span.sep "|"] [:a {:href "/contact"} " Contact Us"]]]
+                 [:p (str "&copy; " year " - this One's for the girls")]]))]
+             end-content)])))))
 
 (defn admin-template
-  [_]  ;; for consistency
+  [title]
   (base-template
+   title
    [[:div#admin
      [:img {:src "/assets/administration.gif" :alt "Administration"}]]
     [:ul.adminFooter
-     [:li [:a {:href "/admin"} "Admin Home"]]
-     [:li [:span.sep "|"] [:a {:href "/admin/welcome"} "Welcome"]]
-     [:li [:span.sep "|"] [:a {:href "/admin/about"} "About Us"]]
-     [:li [:span.sep "|"] [:a {:href "/admin/devotions"} "Devotions"]]
-     [:li [:span.sep "|"] [:a {:href "/admin/scripture"} "Scripture"]]
-     [:li [:span.sep "|"] [:a {:href "/admin/testimonies"} "Testimonies"]]
+     [:li [:a {:href "/admin"} "Admin Home "]]
+     [:li [:span.sep "|"] [:a {:href "/admin/welcome"} " Welcome "]]
+     [:li [:span.sep "|"] [:a {:href "/admin/about"} " About Us "]]
+     [:li [:span.sep "|"] [:a {:href "/admin/devotions"} " Devotions "]]
+     [:li [:span.sep "|"] [:a {:href "/admin/scripture"} " Scripture "]]
+     [:li [:span.sep "|"] [:a {:href "/admin/testimonies"} " Testimonies "]]
      [:li [:span.sep "|"] [:a {:href "/admin/resources"}
-                           "Community Resources"]]
-     [:li [:span.sep "|"] [:a {:href "/admin/contact"} "Contact Us"]]
-     [:li [:span.sep "|"] [:a {:href "/admin/logout"} "Log out"]]]]))
+                           " Community Resources "]]
+     [:li [:span.sep "|"] [:a {:href "/admin/contact"} " Contact Us "]]
+     [:li [:span.sep "|"] [:a {:href "/admin/logout"} " Log out "]]]]))
 
 (defn site-template
-  [main-content]
+  [title main-content]
   (base-template
+   title
    [(into [:div#content] main-content)]
    [[:script {:src "http://www.google-analytics.com/ga.js"
               :type "text/javascript"}]
@@ -82,25 +90,31 @@
 (defn home
   [db]
   (let [text (d/q text-query db [:db/ident :home])]
-    (site-template [[:div#welcome [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
-                     [:p text]
-                     [:img#youare {:src "/assets/you-are.gif"
-                                   :alt "You are loved..."}]]])))
+    (site-template
+     "Welcome"
+     [[:div#welcome [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
+       [:p text]
+       [:img#youare {:src "/assets/you-are.gif"
+                     :alt "You are loved..."}]]])))
 
 (defn about-us
   [db]
   (let [text (d/q text-query db [:db/ident :about-us])]
-    (site-template [[:div#about
-                     [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
-                     [:p text]]])))
+    (site-template
+     "About Us"
+     [[:div#about
+       [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
+       [:p text]]])))
 
 (defn resources
   [db]
   (let [text (d/q text-query db [:db/ident :resources])]
-    (site-template [[:div#resources
-                     [:img.header {:src "/assets/community-resources.gif"
-                                   :alt "Community Resources"}]
-                     [:p text]]])))
+    (site-template
+     "Community Resources"
+     [[:div#resources
+       [:img.header {:src "/assets/community-resources.gif"
+                     :alt "Community Resources"}]
+       [:p text]]])))
 
 (defn devotion-markup
   [dev]
@@ -113,10 +127,12 @@
   [db]
   (let [devotion (d/q '[:find (pull ?e [*]) .
                         :where [?e :devotion/featured? true]] db)]
-    (site-template [[:div#devotions
-                     [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
-                     (into [:dl] (devotion-markup devotion))
-                     [:p [:a {:href "/devotions/archive"} "Read more"]]]])))
+    (site-template
+     "Devotions"
+     [[:div#devotions
+       [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
+       (into [:dl] (devotion-markup devotion))
+       [:p [:a {:href "/devotions/archive"} "Read more"]]]])))
 
 (defn devotion-list-item
   [dev]
@@ -127,9 +143,11 @@
   (let [devotions (->> (d/q '[:find [(pull ?e [*]) ...]
                               :where [?e :devotion/featured? false]] db)
                        (sort-by :devotion/created-at #(compare %2 %1)))]
-    (site-template [[:div#devotions
-                     [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
-                     [:a {:href "/devotions"} "Back to Featured Devotion"]
+    (site-template
+     "Devotions Archive"
+     [[:div#devotions
+       [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
+       [:a {:href "/devotions"} "Back to Featured Devotion"]
                      [:h3 "Archive"]
                      [:ul (map devotion-list-item devotions)]
                      [:dl (mapcat devotion-markup devotions)]
@@ -144,9 +162,11 @@
   (let [categories (->> (d/q '[:find [(pull ?e [*]) ...]
                                :where [?e :scripture-category/name]] db)
                         (sort-by :scripture-category/name))]
-    (site-template [[:div#scripture
-                     [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
-                     [:ul (map scripture-category-list-item categories)]]])))
+    (site-template
+     "Scripture"
+     [[:div#scripture
+       [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
+       [:ul (map scripture-category-list-item categories)]]])))
 
 (defn scripture-markup
   [scripture]
@@ -157,13 +177,15 @@
 (defn scripture-category
   [category]
   {:s3-key (str "/scripture/" (:scripture-category/slug category))
-   :body (site-template [[:div#scripture
-                          [:img.header {:src "/assets/scripture.gif"
-                                        :alt "Scripture"}]
-                          [:dl (mapcat scripture-markup
-                                       (:scripture/_category category))]
-                          [:p [:a {:href "/scripture"}
-                               "Back to Categories"]]]])})
+   :body (site-template
+          (str "Scripture / " (:scripture-category/name category))
+          [[:div#scripture
+            [:img.header {:src "/assets/scripture.gif"
+                          :alt "Scripture"}]
+            [:dl (mapcat scripture-markup
+                         (:scripture/_category category))]
+            [:p [:a {:href "/scripture"}
+                 "Back to Categories"]]]])})
 
 (defn testimony-list-item
   [testimony]
@@ -174,41 +196,47 @@
   (let [testimonies (->> (d/q '[:find [(pull ?e [*]) ...]
                                 :where [?e :testimony/title]] db)
                          (sort-by :testimony/title))]
-    (site-template [[:div#testimonies
-                     [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]
-                     [:ul (map testimony-list-item testimonies)]]])))
+    (site-template
+     "Testimonies"
+     [[:div#testimonies
+       [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]
+       [:ul (map testimony-list-item testimonies)]]])))
 
 (defn testimony
   [testimony]
   {:s3-key (str "/testimonies/" (:testimony/slug testimony))
-   :body (site-template [[:div#testimonies
-                          [:img.header {:src "/assets/testimonies.gif"
-                                        :alt "Testimonies"}]
-                          [:p [:a {:href "/testimonies"}
-                               "Back to Testimony Links"]]
-                          [:dl
-                           [:dt (:testimony/title testimony)]
-                           [:dd (:testimony/text testimony)]]
-                          [:p [:a {:href "/testimonies"}
-                               "Back to Testimony Links"]]]])})
+   :body (site-template
+          (str "Testimonies / " (:testimony/title testimony))
+          [[:div#testimonies
+            [:img.header {:src "/assets/testimonies.gif"
+                          :alt "Testimonies"}]
+            [:p [:a {:href "/testimonies"}
+                 "Back to Testimony Links"]]
+            [:dl
+             [:dt (:testimony/title testimony)]
+             [:dd (:testimony/text testimony)]]
+            [:p [:a {:href "/testimonies"}
+                 "Back to Testimony Links"]]]])})
 
 (def contact-us
-  (site-template [[:div#contact
-                   [:img.header {:src "/assets/contact-us.gif" :alt "Contact Us"}]
-                   [:form {:enctype "application/x-www-form-urlencoded"
-                           :action "/contact/send"
-                           :method "post"}
-                    [:dl
-                     [:dt [:label {:for "name"} "Your name"]]
-                     [:dd#name [:input {:type "text" :name "name"}]]
-                     [:dt [:label {:for "return"} "Your email address"]]
-                     [:dd#return [:input {:type "text" :name "return"}]]
-                     [:dt [:label {:for "body"} "Message"]]
-                     [:dd [:textarea#body {:name "body" :rows "24"
-                                           :cols "80"}]]
-                     [:dt "&nbsp;"]
-                     [:dd [:input#submit {:type "submit" :name "submit"
-                                          :value "Submit"}]]]]]]))
+  (site-template
+   "Contact Us"
+   [[:div#contact
+     [:img.header {:src "/assets/contact-us.gif" :alt "Contact Us"}]
+     [:form {:enctype "application/x-www-form-urlencoded"
+             :action "/contact/send"
+             :method "post"}
+      [:dl
+       [:dt [:label {:for "name"} "Your name"]]
+       [:dd#name [:input {:type "text" :name "name"}]]
+       [:dt [:label {:for "return"} "Your email address"]]
+       [:dd#return [:input {:type "text" :name "return"}]]
+       [:dt [:label {:for "body"} "Message"]]
+       [:dd [:textarea#body {:name "body" :rows "24"
+                             :cols "80"}]]
+       [:dt "&nbsp;"]
+       [:dd [:input#submit {:type "submit" :name "submit"
+                            :value "Submit"}]]]]]]))
 
 (defn all-page-info
   [db]
