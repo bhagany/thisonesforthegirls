@@ -77,7 +77,7 @@
      (str "try { _gat._getTracker(\"UA-8266354-4\");"
           "pageTracker._trackPageview(); } catch(err) {}")]]))
 
-(def text-query '[:find ?text :in $ ?e :where [?e :page/text ?text]])
+(def text-query '[:find ?text . :in $ ?e :where [?e :page/text ?text]])
 
 (defn home
   [db]
