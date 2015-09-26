@@ -21,12 +21,10 @@
     ch))
 
 (defn put-obj!-ch
-  [body bucket key-name]
+  [params]
   (let [ch (chan)]
     (.putObject s3
-                #js {:Bucket bucket
-                     :Key key-name
-                     :Body body}
+                params
                 (fn [err obj]
                   (go
                     (>! ch [err obj])
@@ -60,3 +58,15 @@
           (goog.object/get "admin"))
       (catch (goog.object/get jwt "JsonWebTokenError") e
         false))))
+
+(defn page-info->ch
+  [db bucket]
+  (fn
+    [info]
+    (let [body ((:fn info) db)
+          params #js {:Bucket bucket
+                      :Key (:s3-key info)
+                      :Body body
+                      :ContentLength (count body)
+                      :ContentType "text/html"}]
+      (put-obj!-ch params))))

@@ -50,7 +50,8 @@
             [:p (str "&copy; " year " - this One's for the girls")]]))]
         end-content)]))))
 
-(def admin-template
+(defn admin-template
+  [_]  ;; for consistency
   (base-template
    [[:div#admin
      [:img {:src "/img/administration.gif" :alt "Administration"}]]

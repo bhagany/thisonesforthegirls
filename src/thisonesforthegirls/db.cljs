@@ -37,8 +37,11 @@
 
 (defn persist!-ch
   [db bucket key-name]
-  (let [body (db->string db)]
-    (u/put-obj!-ch body bucket key-name)))
+  (let [body (db->string db)
+        params #js {:Body body
+                    :Bucket bucket
+                    :Key key-name}]
+    (u/put-obj!-ch params)))
 
 (defn transact!-ch
   [conn tx-data bucket key-name]

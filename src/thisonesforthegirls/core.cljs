@@ -116,9 +116,7 @@
          (let [conn (<! conn-ch)
                db @conn
                put-ch (->> p/all-page-info
-                           (map (fn [i]
-                                  (u/put-obj!-ch ((:fn i) db) public-bucket (:s3-key i)))
-                                )
+                           (map (u/page-info->ch db public-bucket))
                            merge)]
            (loop []
              (let [[err :as val] (<! put-ch)]
