@@ -82,44 +82,25 @@
 (defn home
   [db]
   (let [text (d/q text-query db [:db/ident :home])]
-    (site-template [[:img {:class "header" :src "/img/welcome.gif"
-                           :alt "Welcome"}]
-                    [:p text]
-                    [:img#youare {:href "/img/youare.gif" :alt "You are loved..."}]])))
+    (site-template [[:div#welcome [:img.header {:src "/img/welcome.gif" :alt "Welcome"}]
+                     [:p text]
+                     [:img#youare {:href "/img/youare.gif"
+                                   :alt "You are loved..."}]]])))
 
 (defn about-us
   [db]
-  (let [text (d/q text-query db [:db/ident :home])]
-    (site-template [[:img {:class "header" :src "/img/aboutUs.gif"
-                           :alt "About Us"}]
-                    [:p text]])))
+  (let [text (d/q text-query db [:db/ident :about-us])]
+    (site-template [[:div#about
+                     [:img.header {:src "/img/aboutUs.gif" :alt "About Us"}]
+                     [:p text]]])))
 
 (defn resources
   [db]
-  (let [text (d/q text-query db [:db/ident :home])]
-    (site-template [[:img {:class "header" :src "/img/communityResources.gif"
-                           :alt "Community Resources"}]
-                    [:p text]])))
-
-(defn contact-us
-  [_]  ;; for consistency
-  (site-template [[:div#contact
-                   [:img {:class "header" :src "/img/contactUs.gif"
-                          :alt "Contact Us"}]
-                   [:form {:enctype "application/x-www-form-urlencoded"
-                           :action "/contact/send"
-                           :method "post"}
-                    [:dl
-                     [:dt [:label {:for "name"} "Your name"]]
-                     [:dd#name [:input {:type "text" :name "name"}]]
-                     [:dt [:label {:for "return"} "Your email address"]]
-                     [:dd#return [:input {:type "text" :name "return"}]]
-                     [:dt [:label {:for "body"} "Message"]]
-                     [:dd [:textarea#body {:name "body" :rows "24"
-                                           :cols "80"}]]
-                     [:dt "&nbsp;"]
-                     [:dd [:input#submit {:type "submit" :name "submit"
-                                          :value "Submit"}]]]]]]))
+  (let [text (d/q text-query db [:db/ident :resources])]
+    (site-template [[:div#resources
+                     [:img.header {:src "/img/communityResources.gif"
+                                   :alt "Community Resources"}]
+                     [:p text]]])))
 
 (defn devotion-markup
   [dev]
