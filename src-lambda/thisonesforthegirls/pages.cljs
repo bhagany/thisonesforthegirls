@@ -156,7 +156,7 @@
 
 (defn scripture-category
   [category]
-  {:s3-key (:scripture-category/slug category)
+  {:s3-key (str "/scripture/" (:scripture-category/slug category))
    :body (site-template [[:div#scripture
                           [:img.header {:src "/img/scripture.gif"
                                         :alt "Scripture"}]
@@ -200,9 +200,9 @@
   [db]
   (let [defined [{:s3-key "home"
                   :body (home db)}
-                 {:s3-key "about-us"
+                 {:s3-key "about"
                   :body (about-us db)}
-                 {:s3-key "resources"
+                 {:s3-key "community-resources"
                   :body (resources db)}
                  {:s3-key "devotions"
                   :body (featured-devotion db)}
@@ -212,7 +212,7 @@
                   :body (scripture-categories db)}
                  {:s3-key "testimonies"
                   :body (testimonies db)}
-                 {:s3-key "contact-us"
+                 {:s3-key "contact"
                   :body contact-us}]
         s-cats (->> (d/q '[:find [(pull ?e [* {:scripture/_category [*]}]) ...]
                            :where [?e :scripture-category/name]] db)
