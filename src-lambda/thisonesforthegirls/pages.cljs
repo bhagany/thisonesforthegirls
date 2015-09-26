@@ -255,7 +255,21 @@
                  {:s3-key "testimonies"
                   :body (testimonies db)}
                  {:s3-key "contact"
-                  :body contact-us}]
+                  :body contact-us}
+                 {:s3-key "admin"
+                  :body (admin-template "Admin")}
+                 {:s3-key "admin/welcome"
+                  :body (admin-template "Welcome Admin")}
+                 {:s3-key "admin/about"
+                  :body (admin-template "About Us Admin")}
+                 {:s3-key "admin/community-resources"
+                  :body (admin-template "Community Resources Admin")}
+                 {:s3-key "admin/devotions"
+                  :body (admin-template "Devotions Admin")}
+                 {:s3-key "admin/scripture"
+                  :body (admin-template "Scripture Admin")}
+                 {:s3-key "admin/testimonies"
+                  :body (admin-template "Testimonies Admin")}]
         s-cats (->> (d/q '[:find [(pull ?e [* {:scripture/_category [*]}]) ...]
                            :where [?e :scripture-category/name]] db)
                     (map scripture-category))
