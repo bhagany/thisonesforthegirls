@@ -178,6 +178,20 @@
                      [:img.header {:src "/img/testimonies.gif" :alt "Testimonies"}]
                      [:ul (map testimony-list-item testimonies)]]])))
 
+(defn testimony
+  [testimony]
+  {:s3-key (str "/testimonies/" (:testimony/slug testimony))
+   :body (site-template [[:div#testimonies
+                          [:img.header {:src "/assets/testimonies.gif"
+                                        :alt "Testimonies"}]
+                          [:p [:a {:href "/testimonies"}
+                               "Back to Testimony Links"]]
+                          [:dl
+                           [:dt (:testimony/title testimony)]
+                           [:dd (:testimony/text testimony)]]
+                          [:p [:a {:href "/testimonies"}
+                               "Back to Testimony Links"]]]])})
+
 (def contact-us
   (site-template [[:div#contact
                    [:img.header {:src "/img/contactUs.gif" :alt "Contact Us"}]
@@ -216,6 +230,10 @@
                   :body contact-us}]
         s-cats (->> (d/q '[:find [(pull ?e [* {:scripture/_category [*]}]) ...]
                            :where [?e :scripture-category/name]] db)
-                    (map scripture-category))]
+                    (map scripture-category))
+        tmonies (->> (d/q '[:find [(pull ?e [*]) ...]
+                            :where [?e :testimony/title]] db)
+                     (map testimony))]
     (-> defined
-        (into s-cats))))
+        (into s-cats)
+        (into tmonies))))
