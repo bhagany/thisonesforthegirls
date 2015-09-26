@@ -148,6 +148,23 @@
                      [:img.header {:src "/img/scripture.gif" :alt "Scripture"}]
                      [:ul (map scripture-category-list-item categories)]]])))
 
+(defn scripture-markup
+  [scripture]
+  [[:dt
+    [:label (:scripture/reference scripture)]]
+   [:dd (:scripture/text scripture)]])
+
+(defn scripture-category
+  [category]
+  {:s3-key (:scripture-category/slug category)
+   :body (site-template [[:div#scripture
+                          [:img.header {:src "/img/scripture.gif"
+                                        :alt "Scripture"}]
+                          [:dl (mapcat scripture-markup
+                                       (:scripture/_category category))]
+                          [:p [:a {:href "/scripture"}
+                               "Back to Categories"]]]])})
+
 (def contact-us
   (site-template [[:div#contact
                    [:img.header {:src "/img/contactUs.gif" :alt "Contact Us"}]
@@ -181,5 +198,9 @@
                  {:s3-key "scripture"
                   :body (scripture-categories db)}
                  {:s3-key "contact-us"
-                  :body contact-us}]]
-    defined))
+                  :body contact-us}]
+        s-cats (->> (d/q '[:find [(pull ?e [* {:scripture/_category [*]}]) ...]
+                           :where [?e :scripture-category/name]] db)
+                    (map scripture-category))]
+    (-> defined
+        (into s-cats))))
