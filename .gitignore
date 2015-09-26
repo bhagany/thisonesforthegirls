@@ -6,6 +6,7 @@ pom.xml
 /target/
 .lein*
 .cljs_node_repl
+.nrepl-port
 node_modules
-out
+out*
 target
