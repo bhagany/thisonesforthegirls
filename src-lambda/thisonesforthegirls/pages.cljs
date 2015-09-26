@@ -104,10 +104,10 @@
 
 (defn devotion-markup
   [dev]
-  [:dt
-   [:span.dTitle (:devotion/title dev)]
-   [:span.dAuthor (str "by " (:devotion/author dev))]]
-  [:dd (:devotion/body dev)])
+  [[:dt
+     [:span.dTitle (:devotion/title dev)]
+    [:span.dAuthor (str "by " (:devotion/author dev))]]
+   [:dd (:devotion/body dev)]])
 
 (defn featured-devotion
   [db]
@@ -115,7 +115,7 @@
                         :where [?e :devotion/featured? true]] db)]
     (site-template [[:div#devotions
                      [:img.header {:src "/img/devotions.gif" :alt "Devotions"}]
-                     [:dl (devotion-markup devotion)]
+                     (into [:dl] (devotion-markup devotion))
                      [:p [:a {:href "/devotions/archive"} "Read more"]]]])))
 
 (defn devotion-list-item
@@ -132,7 +132,7 @@
                      [:a {:href "/devotions"} "Back to Featured Devotion"]
                      [:h3 "Archive"]
                      [:ul (map devotion-list-item devotions)]
-                     [:dl (map devotion-markup devotions)]
+                     [:dl (mapcat devotion-markup devotions)]
                      [:a {:href "/devotions"} "Back to Featured Devotion"]]])))
 
 (defn scripture-category-list-item
