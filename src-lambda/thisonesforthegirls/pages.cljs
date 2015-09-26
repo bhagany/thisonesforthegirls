@@ -15,7 +15,7 @@
        [:head
         [:meta {:http-equiv "Content-Type" :content "text/html; charset=UTF-8"}]
         [:meta {:http-equiv "Content-Language" :content "en-US"}]
-        [:link {:href "/css/girls.css" :media "screen"
+        [:link {:href "/assets/girls.css" :media "screen"
                 :rel "stylesheet" :type "text/css"}]]
        (into
         [:body
@@ -54,7 +54,7 @@
   [_]  ;; for consistency
   (base-template
    [[:div#admin
-     [:img {:src "/img/administration.gif" :alt "Administration"}]]
+     [:img {:src "/assets/administration.gif" :alt "Administration"}]]
     [:ul.adminFooter
      [:li [:a {:href "/admin"} "Admin Home"]]
      [:li [:span.sep "|"] [:a {:href "/admin/welcome"} "Welcome"]]
@@ -82,23 +82,23 @@
 (defn home
   [db]
   (let [text (d/q text-query db [:db/ident :home])]
-    (site-template [[:div#welcome [:img.header {:src "/img/welcome.gif" :alt "Welcome"}]
+    (site-template [[:div#welcome [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
                      [:p text]
-                     [:img#youare {:href "/img/youare.gif"
+                     [:img#youare {:src "/assets/you-are.gif"
                                    :alt "You are loved..."}]]])))
 
 (defn about-us
   [db]
   (let [text (d/q text-query db [:db/ident :about-us])]
     (site-template [[:div#about
-                     [:img.header {:src "/img/aboutUs.gif" :alt "About Us"}]
+                     [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
                      [:p text]]])))
 
 (defn resources
   [db]
   (let [text (d/q text-query db [:db/ident :resources])]
     (site-template [[:div#resources
-                     [:img.header {:src "/img/communityResources.gif"
+                     [:img.header {:src "/assets/community-resources.gif"
                                    :alt "Community Resources"}]
                      [:p text]]])))
 
@@ -114,7 +114,7 @@
   (let [devotion (d/q '[:find (pull ?e [*]) .
                         :where [?e :devotion/featured? true]] db)]
     (site-template [[:div#devotions
-                     [:img.header {:src "/img/devotions.gif" :alt "Devotions"}]
+                     [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
                      (into [:dl] (devotion-markup devotion))
                      [:p [:a {:href "/devotions/archive"} "Read more"]]]])))
 
@@ -128,7 +128,7 @@
                               :where [?e :devotion/featured? false]] db)
                        (sort-by :devotion/created-at #(compare %2 %1)))]
     (site-template [[:div#devotions
-                     [:img.header {:src "/img/devotions.gif" :alt "Devotions"}]
+                     [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
                      [:a {:href "/devotions"} "Back to Featured Devotion"]
                      [:h3 "Archive"]
                      [:ul (map devotion-list-item devotions)]
@@ -145,7 +145,7 @@
                                :where [?e :scripture-category/name]] db)
                         (sort-by :scripture-category/name))]
     (site-template [[:div#scripture
-                     [:img.header {:src "/img/scripture.gif" :alt "Scripture"}]
+                     [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
                      [:ul (map scripture-category-list-item categories)]]])))
 
 (defn scripture-markup
@@ -158,7 +158,7 @@
   [category]
   {:s3-key (str "/scripture/" (:scripture-category/slug category))
    :body (site-template [[:div#scripture
-                          [:img.header {:src "/img/scripture.gif"
+                          [:img.header {:src "/assets/scripture.gif"
                                         :alt "Scripture"}]
                           [:dl (mapcat scripture-markup
                                        (:scripture/_category category))]
@@ -175,7 +175,7 @@
                                 :where [?e :testimony/title]] db)
                          (sort-by :testimony/title))]
     (site-template [[:div#testimonies
-                     [:img.header {:src "/img/testimonies.gif" :alt "Testimonies"}]
+                     [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]
                      [:ul (map testimony-list-item testimonies)]]])))
 
 (defn testimony
@@ -194,7 +194,7 @@
 
 (def contact-us
   (site-template [[:div#contact
-                   [:img.header {:src "/img/contactUs.gif" :alt "Contact Us"}]
+                   [:img.header {:src "/assets/contact-us.gif" :alt "Contact Us"}]
                    [:form {:enctype "application/x-www-form-urlencoded"
                            :action "/contact/send"
                            :method "post"}

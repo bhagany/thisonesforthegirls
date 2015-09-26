@@ -1,0 +1,218 @@
+body {
+  margin: 0;
+  border: 0;
+  background-color: #5a3d1c;
+  font-family: Georgia, serif;
+  font-size: 9pt;
+}
+
+img {
+  display: block;
+}
+
+p {
+  margin-left: 30px;
+  margin-right: 80px;
+}
+
+a {
+  color: #5a3d1c;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #bc8f67;
+  text-decoration: underline;
+}
+
+label {
+  font-weight: bold;
+}
+
+dt {
+  margin-left: 30px;
+  padding: 0;
+}
+
+dd {
+  margin-left: 20px;
+  padding: 0;
+}
+
+input, textarea {
+  margin-left: 20px;
+}
+
+textarea {
+  width: 400px;
+  height: 250px;
+}
+
+p.address {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  font-size: .9em;
+}
+
+p.phone {
+  margin-top: 7px;
+  font-size: .9em;
+}
+
+img.header {
+  margin-bottom: 20px;
+}
+
+span.dTitle {
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+span.dAuthor {
+  font-style: italic;
+  display: block;
+}
+
+#youare {
+  margin: 100px 0px -230px 110px;
+}
+
+#nav ul {
+  margin: 15px 20px 15px 40px;
+  list-style: none;
+  list-style-position: inside;
+  padding: 0;
+  margin: 0;
+}
+
+#nav li {
+  margin: 0;
+  padding: 0px 0px 10px 0px;
+  list-style-image: url(/assets/link-image.gif);
+}
+
+#nav a {
+  color: #22170b;
+}
+
+#nav a:hover {
+  color: #f2e0d1;
+}
+
+#nav span {
+  padding-left:42px;
+}
+
+#footer ul {
+  margin: 0;
+  padding: 8px 0px;
+  float: right;
+}
+
+#footer li, #admin ul.adminFooter li {
+  display: inline;
+}
+
+#footer p {
+  margin: 0;
+  float: right;
+  clear: right;
+}
+
+#wrapper {
+  width: 751px;
+  margin: 0 auto;
+}
+
+#header {
+  width: 100%;
+  height: 200px;
+  background: transparent url(/assets/header.gif) no-repeat top right;
+}
+
+#navContainer {
+  width: 163px;
+  position: relative;
+  float: left;
+  clear: left;
+  margin-right: -40px;
+}
+
+#navTop {
+  width: 163px;
+  height: 26px;
+  background: transparent url(/assets/nav-top.gif);
+  float: left;
+}
+
+#nav {
+  width: 163px;
+  background: transparent url(/assets/nav-tile.gif);
+  float: left;
+}
+
+#navBottom {
+  width: 163px;
+  height: 68px;
+  background: transparent url(/assets/nav-bottom.gif);
+  float: left;
+}
+
+#content, #admin {
+  background: #fff7f0 url(/assets/main-corner.gif) no-repeat bottom right;
+  float: left;
+  width: 538px;
+  min-height: 150px;
+  padding: 15px 0px 250px 90px;
+}
+
+#vines {
+  width: 99px;
+  height: 224px;
+  background: transparent url(/assets/main-corner.gif);
+}
+
+#footer {
+  width: 100%;
+  color: #fff7f0;
+  font-size: .8em;
+}
+
+#footer a {
+  color: #fff7f0;
+}
+
+#footer a:hover {
+  color: #ecbe88;
+}
+
+#admin ul.adminFooter {
+  margin: 0;
+  padding: 8px 0px;
+}
+
+#admin h4 {
+  margin: 50px 0px 0px 0px;
+}
+
+#scripture label {
+  font-style: italic;
+}
+
+#resources dt, #testimonies dt {
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+dd.delForm {
+  display: inline;
+  margin: 0;
+}
+
+dd.address textarea {
+  height: 100px;
+}
+
+dd.blurb textarea {
+  height: 150px;
+}

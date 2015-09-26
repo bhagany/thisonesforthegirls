@@ -1,0 +1,32 @@
+#!/usr/bin/env boot
+
+(set-env! :dependencies '[[amazonica "0.3.32"]])
+(require '[amazonica.aws.s3 :as s3])
+
+
+(def assets
+  (let [directory (clojure.java.io/file "assets")]
+    (drop 1 (file-seq directory))))
+
+(defn content-type
+  [filename]
+  (cond
+    (.endsWith filename ".png") "image/png"
+    (.endsWith filename ".gif") "image/gif"
+    (.endsWith filename ".jpg") "image/jpg"
+    (.endsWith filename ".css") "text/css"))
+
+(def bucket-name "thisonesforthegirls.org")
+
+(defn put-asset
+  [file]
+  (let [key (.getPath file)]
+    (println "Putting" key)
+    (s3/put-object :bucket-name bucket-name
+                   :key key
+                   :file file
+                   :metadata {:content-length (.length file)
+                              :content-type (content-type key)})))
+
+(defn -main [& args]
+  (dorun (map put-asset assets)))
