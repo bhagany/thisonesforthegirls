@@ -165,6 +165,19 @@
                           [:p [:a {:href "/scripture"}
                                "Back to Categories"]]]])})
 
+(defn testimony-list-item
+  [testimony]
+  [:li [:a {:href (str "/testimonies/" (:testimony/slug testimony))}]])
+
+(defn testimonies
+  [db]
+  (let [testimonies (->> (d/q '[:find [(pull ?e [*]) ...]
+                                :where [?e :testimony/title]] db)
+                         (sort-by :testimony/title))]
+    (site-template [[:div#testimonies
+                     [:img.header {:src "/img/testimonies.gif" :alt "Testimonies"}]
+                     [:ul (map testimony-list-item testimonies)]]])))
+
 (def contact-us
   (site-template [[:div#contact
                    [:img.header {:src "/img/contactUs.gif" :alt "Contact Us"}]
@@ -197,6 +210,8 @@
                   :body (archived-devotions db)}
                  {:s3-key "scripture"
                   :body (scripture-categories db)}
+                 {:s3-key "testimonies"
+                  :body (testimonies db)}
                  {:s3-key "contact-us"
                   :body contact-us}]
         s-cats (->> (d/q '[:find [(pull ?e [* {:scripture/_category [*]}]) ...]
