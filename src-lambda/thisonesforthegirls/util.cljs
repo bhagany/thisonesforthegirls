@@ -60,12 +60,11 @@
         false))))
 
 (defn page-info->ch
-  [db bucket]
+  [bucket]
   (fn
-    [info]
-    (let [body ((:fn info) db)
-          params #js {:Bucket bucket
-                      :Key (:s3-key info)
+    [{:keys [s3-key body]}]
+    (let [params #js {:Bucket bucket
+                      :Key s3-key
                       :Body body
                       :ContentLength (count body)
                       :ContentType "text/html"}]

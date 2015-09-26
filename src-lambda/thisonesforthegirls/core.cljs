@@ -116,8 +116,8 @@
        (go
          (let [conn (<! conn-ch)
                db @conn
-               put-ch (->> p/all-page-info
-                           (map (u/page-info->ch db public-bucket))
+               put-ch (->> (p/all-page-info db)
+                           (map (u/page-info->ch public-bucket))
                            merge)]
            (loop []
              (let [[err :as val] (<! put-ch)]

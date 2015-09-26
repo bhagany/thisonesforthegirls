@@ -135,15 +135,36 @@
                      [:dl (map devotion-markup devotions)]
                      [:a {:href "/devotions"} "Back to Featured Devotion"]]])))
 
-(def all-page-info [{:fn home
-                     :s3-key "home"}
-                    {:fn about-us
-                     :s3-key "about-us"}
-                    {:fn resources
-                     :s3-key "resources"}
-                    {:fn contact-us
-                     :s3-key "contact-us"}
-                    {:fn featured-devotion
-                     :s3-key "devotions"}
-                    {:fn archived-devotions
-                     :s3-key "devotions/archive"}])
+(def contact-us
+  (site-template [[:div#contact
+                   [:img.header {:src "/img/contactUs.gif" :alt "Contact Us"}]
+                   [:form {:enctype "application/x-www-form-urlencoded"
+                           :action "/contact/send"
+                           :method "post"}
+                    [:dl
+                     [:dt [:label {:for "name"} "Your name"]]
+                     [:dd#name [:input {:type "text" :name "name"}]]
+                     [:dt [:label {:for "return"} "Your email address"]]
+                     [:dd#return [:input {:type "text" :name "return"}]]
+                     [:dt [:label {:for "body"} "Message"]]
+                     [:dd [:textarea#body {:name "body" :rows "24"
+                                           :cols "80"}]]
+                     [:dt "&nbsp;"]
+                     [:dd [:input#submit {:type "submit" :name "submit"
+                                          :value "Submit"}]]]]]]))
+
+(defn all-page-info
+  [db]
+  (let [defined [{:s3-key "home"
+                  :body (home db)}
+                 {:s3-key "about-us"
+                  :body (about-us db)}
+                 {:s3-key "resources"
+                  :body (resources db)}
+                 {:s3-key "devotions"
+                  :body (featured-devotion db)}
+                 {:s3-key "devotions/archive"
+                  :body (archived-devotions db)}
+                 {:body contact-us
+                  :s3-key "contact-us"}]]
+    defined))
