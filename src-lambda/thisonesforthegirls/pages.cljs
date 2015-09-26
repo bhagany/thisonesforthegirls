@@ -35,7 +35,7 @@
                    [:li [:a {:href "/devotions"} "Devotions"]]
                    [:li [:a {:href "/scripture"} "Scripture"]]
                    [:li [:a {:href "/testimonies"} "Testimonies"]]
-                   [:li [:a {:href "/resources"} "Community "
+                   [:li [:a {:href "/community-resources"} "Community "
                          [:span "Resources"]]]
                    [:li [:a {:href "/contact"} "Contact Us"]]]]
                  [:div#navVines]
@@ -50,7 +50,7 @@
                   [:li [:span.sep "|"] [:a {:href "/scripture"} " Scripture "]]
                   [:li [:span.sep "|"] [:a {:href "/testimonies"}
                                         " Testimonies "]]
-                  [:li [:span.sep "|"] [:a {:href "/resources"}
+                  [:li [:span.sep "|"] [:a {:href "/community-resources"}
                                         " Community Resources "]]
                   [:li [:span.sep "|"] [:a {:href "/contact"} " Contact Us"]]]
                  [:p (str "&copy; " year " - this One's for the girls")]]))]
@@ -69,7 +69,7 @@
      [:li [:span.sep "|"] [:a {:href "/admin/devotions"} " Devotions "]]
      [:li [:span.sep "|"] [:a {:href "/admin/scripture"} " Scripture "]]
      [:li [:span.sep "|"] [:a {:href "/admin/testimonies"} " Testimonies "]]
-     [:li [:span.sep "|"] [:a {:href "/admin/resources"}
+     [:li [:span.sep "|"] [:a {:href "/admin/community-resources"}
                            " Community Resources "]]
      [:li [:span.sep "|"] [:a {:href "/admin/contact"} " Contact Us "]]
      [:li [:span.sep "|"] [:a {:href "/admin/logout"} " Log out "]]]]))
