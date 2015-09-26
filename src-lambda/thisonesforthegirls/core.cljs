@@ -22,7 +22,6 @@
 
    ;; Page attributes
    :page/text {}
-   :page/devotions {:db/cardinality :db.cardinality/many}
    :page/sections {:db/cardinality :db.cardinality/many}
    :page/resources {:db/cardinality :db.cardinality/many}
    :page/scriptures {:db/cardinality :db.cardinality/many}
@@ -30,7 +29,9 @@
 
    :devotion/author {}
    :devotion/title {}
-   :devotion/archived? {}
+   :devotion/body {}
+   :devotion/created-at {}
+   :devotion/featured? {}
 
    :resource/name {}
    :resource/text {}

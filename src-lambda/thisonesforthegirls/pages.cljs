@@ -121,6 +121,39 @@
                      [:dd [:input#submit {:type "submit" :name "submit"
                                           :value "Submit"}]]]]]]))
 
+(defn devotion-markup
+  [dev]
+  [:dt
+   [:span.dTitle (:devotion/title dev)]
+   [:span.dAuthor (str "by " (:devotion/author dev))]]
+  [:dd (:devotion/body dev)])
+
+(defn featured-devotion
+  [db]
+  (let [devotion (d/q '[:find (pull ?e [*]) .
+                        :where [?e :devotion/featured? true]] db)]
+    (site-template [[:div#devotions
+                     [:img.header {:src "/img/devotions.gif" :alt "Devotions"}]
+                     [:dl (devotion-markup devotion)]
+                     [:p [:a {:href "/devotions/archive"} "Read more"]]]])))
+
+(defn devotion-list-item
+  [dev]
+  [:li [:a {:href (str "#" (:db/id dev))}]])
+
+(defn archived-devotions
+  [db]
+  (let [devotions (->> (d/q '[:find [(pull ?e [*]) ...]
+                              :where [?e :devotion/featured? false]] db)
+                       (sort-by :devotion/created-at #(compare %2 %1)))]
+    (site-template [[:div#devotions
+                     [:img.header {:src "/img/devotions.gif" :alt "Devotions"}]
+                     [:a {:href "/devotions"} "Back to Featured Devotion"]
+                     [:h3 "Archive"]
+                     [:ul (map devotion-list-item devotions)]
+                     [:dl (map devotion-markup devotions)]
+                     [:a {:href "/devotions"} "Back to Featured Devotion"]]])))
+
 (def all-page-info [{:fn home
                      :s3-key "home"}
                     {:fn about-us
@@ -128,4 +161,8 @@
                     {:fn resources
                      :s3-key "resources"}
                     {:fn contact-us
-                     :s3-key "contact-us"}])
+                     :s3-key "contact-us"}
+                    {:fn featured-devotion
+                     :s3-key "devotions"}
+                    {:fn archived-devotions
+                     :s3-key "devotions/archive"}])
