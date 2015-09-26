@@ -135,6 +135,19 @@
                      [:dl (map devotion-markup devotions)]
                      [:a {:href "/devotions"} "Back to Featured Devotion"]]])))
 
+(defn scripture-category-list-item
+  [category]
+  [:li [:a {:href (str "/scripture/" (:scripture-category/slug category))}]])
+
+(defn scripture-categories
+  [db]
+  (let [categories (->> (d/q '[:find [(pull ?e [*]) ...]
+                               :where [?e :scripture-category/name]] db)
+                        (sort-by :scripture-category/name))]
+    (site-template [[:div#scripture
+                     [:img.header {:src "/img/scripture.gif" :alt "Scripture"}]
+                     [:ul (map scripture-category-list-item categories)]]])))
+
 (def contact-us
   (site-template [[:div#contact
                    [:img.header {:src "/img/contactUs.gif" :alt "Contact Us"}]
@@ -165,6 +178,8 @@
                   :body (featured-devotion db)}
                  {:s3-key "devotions/archive"
                   :body (archived-devotions db)}
-                 {:body contact-us
-                  :s3-key "contact-us"}]]
+                 {:s3-key "scripture"
+                  :body (scripture-categories db)}
+                 {:s3-key "contact-us"
+                  :body contact-us}]]
     defined))
