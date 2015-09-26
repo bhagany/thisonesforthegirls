@@ -238,6 +238,14 @@
        [:dd [:input#submit {:type "submit" :name "submit"
                             :value "Submit"}]]]]]]))
 
+(def error
+  (site-template
+   "Error"
+   [[:div#error
+     [:h1 "Error"]
+     [:p "We couldn't find what you were looking for"]
+     [:p [:a {:href "/"} "Go back to the home page"]]]]))
+
 (defn all-page-info
   [db]
   (let [defined [{:s3-key "home"
@@ -256,6 +264,8 @@
                   :body (testimonies db)}
                  {:s3-key "contact"
                   :body contact-us}
+                 {:s3-key "error"
+                  :body error}
                  {:s3-key "admin"
                   :body (admin-template "Admin")}
                  {:s3-key "admin/welcome"
