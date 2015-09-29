@@ -1,128 +1,43 @@
+;; TODO: cloudformation template
 (ns thisonesforthegirls.core
-  (:require [cljs.core.async :refer [<! merge]]
-            [cljs-lambda.util :refer [async-lambda-fn]]
-            [cljs.nodejs :as node]
-            [datascript.core :as d]
+  (:require [cljs-lambda.util :refer [async-lambda-fn]]
+            [com.stuartsierra.component :as component]
             [thisonesforthegirls.db :as db]
-            [thisonesforthegirls.pages :as p]
-            [thisonesforthegirls.util :as u])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [thisonesforthegirls.lambda-fns :as l]
+            [thisonesforthegirls.s3 :as s3]))
 
-(def db-bucket "thisonesforthegirls.org-private")
-(def db-key "db")
-(def public-bucket "thisonesforthegirls.org")
+(def config
+  {:db {:bucket "thisonesforthegirls.org-private"
+        :key "db"}
+   :lambda-fns {:html-bucket "thisonesforthegirls.org"}})
 
-(def schema
-  {:db/ident {:db/unique :db.unique/identity}
-   :user/admin {}
-   :user/name {}
-   :user/password {}
-   :token {}
-   :secret {}
+(defn prod-system [config]
+  (component/system-map
+   :s3-conn (s3/s3-connection)
+   :db (db/datascript-db (get-in config [:db :bucket])
+                         (get-in config [:db :key]))
+   :lambda-fns (l/lambda-fns (get-in config [:lambda-fns :html-bucket]))))
 
-   ;; Page attributes
-   :page/text {}
-   :page/sections {:db/cardinality :db.cardinality/many}
-   :page/resources {:db/cardinality :db.cardinality/many}
-   :page/scriptures {:db/cardinality :db.cardinality/many}
-   :page/testimonies {:db/cardinality :db.cardinality/many}
+(def system (prod-system config))
 
-   :devotion/author {}
-   :devotion/title {}
-   :devotion/body {}
-   :devotion/created-at {}
-   :devotion/featured? {}
+(defn with-started-system
+  [wrapped-fn system event context]
+  (let [started-system (component/start system)
+        async-fn (async-lambda-fn (wrapped-fn (:lambda-fns started-system)))]
+    (async-fn event context)))
 
-   :resource/name {}
-   :resource/text {}
+(defn ^:export set-admin-creds
+  [event context]
+  (with-started-system l/set-admin-creds system event context))
 
-   :section/name {}
+(defn ^:export set-token-secret
+  [event context]
+  (with-started-system l/set-token-secret system event context))
 
-   :scripture-category/name {}
-   :scripture-category/slug {}
+(defn ^:export login
+  [event context]
+  (with-started-system l/login system event context))
 
-   :scripture/category {:db/valueType :db.type/ref}
-   :scripture/text {}
-   :scripture/reference {}
-
-   :testimony/title {}
-   :testimony/slug {}
-   :testimony/text {}})
-
-(def ^:export set-admin-creds
-  (async-lambda-fn
-   (fn [event context]
-     (let [{:keys [username password]} event
-           bcrypt (node/require "bcryptjs")
-           hashed (.hashSync bcrypt password 10)
-           conn-ch (db/get-conn-ch db-bucket db-key schema)]
-       (go
-         (let [conn (<! conn-ch)
-               [err] (<! (db/transact!-ch
-                          conn
-                          [{:db/id -1
-                            :db/ident :admin
-                            :user/name username
-                            :user/password hashed}]
-                          db-bucket
-                          db-key))]
-           (if err
-             (throw (js/Error. err))
-             "Credentials set")))))))
-
-(def ^:export set-token-secret
-  (async-lambda-fn
-   (fn [event context]
-     (let [{:keys [secret]} event
-           conn-ch (db/get-conn-ch db-bucket db-key schema)]
-       (go
-         (let [conn (<! conn-ch)
-               [err] (<! (db/transact!-ch
-                          conn
-                          [{:db/id -1
-                            :db/ident :secret
-                            :secret secret}]
-                          db-bucket
-                          db-key))]
-           (if err
-             (throw (js/Error. err))
-             "Secret set")))))))
-
-(def ^:export login
-  (async-lambda-fn
-   (fn [event context]
-     (let [conn-ch (db/get-conn-ch db-bucket db-key schema)
-           {:keys [username password]} event
-           bcrypt (node/require "bcryptjs")]
-       (go
-         (let [conn (<! conn-ch)
-               db @conn
-               stored-hash (d/q '[:find ?password .
-                                  :in $ ?username
-                                  :where
-                                  [?e :db/ident :admin]
-                                  [?e :user/name ?username]
-                                  [?e :user/password ?password]]
-                                db
-                                username)]
-           (if (.compareSync bcrypt password stored-hash)
-             (u/get-login-token db)
-             (throw (js/Error. "Wrong password")))))))))
-
-(def ^:export generate-all-pages
-  (async-lambda-fn
-   (fn [event context]
-     (let [conn-ch (db/get-conn-ch db-bucket db-key schema)]
-       (go
-         (let [conn (<! conn-ch)
-               db @conn
-               put-ch (->> (p/all-page-info db)
-                           (map (u/page-info->ch public-bucket))
-                           merge)]
-           (loop []
-             (let [[err :as val] (<! put-ch)]
-               (when err
-                 (throw (js/Error. err)))
-               (when-not (nil? val)
-                 (recur))))
-           "success"))))))
+(defn ^:export generate-all-pages
+  [event context]
+  (with-started-system l/generate-all-pages system event context))

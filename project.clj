@@ -2,6 +2,7 @@
   :description "FIXME"
   :url "http://please.FIXME"
   :dependencies [[com.cognitect/transit-cljs "0.8.225"]
+                 [com.stuartsierra/component "0.3.0"]
                  [datascript "0.13.0"]
                  [datascript-transit "0.2.0" :exclusions [com.cognitect/transit-clj
                                                           com.cognitect/transit-cljs]]
