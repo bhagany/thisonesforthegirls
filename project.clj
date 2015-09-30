@@ -21,9 +21,9 @@
                        [jsonwebtoken "5.0.5"]
                        [source-map-support "0.3.2"]]}
 
-  :source-paths ["src-lambda"]
+  :source-paths ["src-lambda" "dev-lambda" "out-dev-lambda"]
 
-  :clean-targets ["out-lambda"]
+  :clean-targets ^{:protect false} ["out-lambda" "out-dev-lambda" "target"]
 
   :cljs-lambda {:defaults {:role "arn:aws:iam::801085451725:role/thisonesforthegirls-lambda"}
                 :functions [{:name   "set-admin-creds"
@@ -35,10 +35,17 @@
                             {:name   "generate-all-pages"
                              :invoke thisonesforthegirls.system/generate-all-pages}]}
 
-  :cljsbuild {:builds [{:id "thisonesforthegirls"
+  :cljsbuild {:builds [{:id "lambda"
                         :source-paths ["src-lambda"]
                         :compiler {:output-to "out-lambda/thisonesforthegirls.js"
                                    :output-dir "out-lambda"
+                                   :target :nodejs
+                                   :optimizations :none
+                                   :source-map true}}
+                       {:id "dev-lambda"
+                        :source-paths ["src-lambda" "dev-lambda"]
+                        :compiler {:output-to "out-dev-lambda/thisonesforthegirls.js"
+                                   :output-dir "out-dev-lambda"
                                    :target :nodejs
                                    :optimizations :none
                                    :source-map true}}]})
