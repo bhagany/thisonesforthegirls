@@ -18,6 +18,21 @@
    (map->LambdaFns {:html-bucket html-bucket})
    [:db :s3-conn]))
 
+;; Helpers
+
+(defn page-info->ch
+  [lambda-fns bucket]
+  (fn
+    [{:keys [s3-key body]}]
+    (let [params #js {:Bucket bucket
+                      :Key s3-key
+                      :Body body
+                      :ContentLength (count body)
+                      :ContentType "text/html"}]
+      (s3/put-obj!-ch (:s3-conn lambda-fns) params))))
+
+;; Functions for export
+
 (defn set-admin-creds
   [lambda-fns]
   (fn [event context]
@@ -75,12 +90,12 @@
 (defn generate-all-pages
   [lambda-fns]
   (fn [event context]
-    (let [{:keys [db s3-conn html-bucket]} lambda-fns]
+    (let [{:keys [db html-bucket]} lambda-fns]
       (go
         (let [conn (<! (:conn-ch db))
               db-data @conn
               put-ch (->> (p/all-page-info db-data)
-                          (map (s3/page-info->ch s3-conn html-bucket))
+                          (map (page-info->ch lambda-fns html-bucket))
                           merge)]
           (loop []
             (let [[err :as val] (<! put-ch)]

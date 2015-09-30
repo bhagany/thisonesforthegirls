@@ -45,14 +45,3 @@
 (defn s3-connection
   []
   (map->S3Conn {}))
-
-(defn page-info->ch
-  [s3-conn bucket]
-  (fn
-    [{:keys [s3-key body]}]
-    (let [params #js {:Bucket bucket
-                      :Key s3-key
-                      :Body body
-                      :ContentLength (count body)
-                      :ContentType "text/html"}]
-      (put-obj!-ch s3-conn params))))
