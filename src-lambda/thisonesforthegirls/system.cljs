@@ -1,5 +1,5 @@
 ;; TODO: cloudformation template
-(ns thisonesforthegirls.core
+(ns thisonesforthegirls.system
   (:require [cljs-lambda.util :refer [async-lambda-fn]]
             [com.stuartsierra.component :as component]
             [thisonesforthegirls.db :as db]

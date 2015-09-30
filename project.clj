@@ -27,13 +27,13 @@
 
   :cljs-lambda {:defaults {:role "arn:aws:iam::801085451725:role/thisonesforthegirls-lambda"}
                 :functions [{:name   "set-admin-creds"
-                             :invoke thisonesforthegirls.core/set-admin-creds}
+                             :invoke thisonesforthegirls.system/set-admin-creds}
                             {:name   "set-token-secret"
-                             :invoke thisonesforthegirls.core/set-token-secret}
+                             :invoke thisonesforthegirls.system/set-token-secret}
                             {:name   "login"
-                             :invoke thisonesforthegirls.core/login}
+                             :invoke thisonesforthegirls.system/login}
                             {:name   "generate-all-pages"
-                             :invoke thisonesforthegirls.core/generate-all-pages}]}
+                             :invoke thisonesforthegirls.system/generate-all-pages}]}
 
   :cljsbuild {:builds [{:id "thisonesforthegirls"
                         :source-paths ["src-lambda"]
