@@ -69,6 +69,7 @@
       conn)))
 
 (defprotocol Db
+  (refresh-conn-ch [this])
   (persist!-ch [this])
   (transact!-ch [this tx-data]))
 
@@ -77,16 +78,7 @@
   (start [this]
     (if conn-ch
       this
-      (let [s3-conn-ch (chan 1 (map (s3-obj->conn schema)))
-            new-conn-ch (chan)]
-        (pipe (s3/get-obj-ch s3-conn bucket key-name) s3-conn-ch)
-        (go (loop [conn nil]
-              (let [conn* (if conn
-                            conn
-                            (<! s3-conn-ch))]
-                (>! new-conn-ch conn*)
-                (recur conn*))))
-        (assoc this :conn-ch new-conn-ch))))
+      (refresh-conn-ch this)))
   (stop [this]
     (if conn-ch
       (do
@@ -95,6 +87,17 @@
       this))
 
   Db
+  (refresh-conn-ch [this]
+    (let [s3-conn-ch (chan 1 (map (s3-obj->conn schema)))
+          new-conn-ch (chan)]
+      (pipe (s3/get-obj-ch s3-conn bucket key-name) s3-conn-ch)
+      (go-loop [conn nil]
+        (let [conn* (if conn
+                      conn
+                      (<! s3-conn-ch))]
+          (>! new-conn-ch conn*)
+          (recur conn*)))
+      (assoc this :conn-ch new-conn-ch)))
   (persist!-ch [_]
     (go
       (let [db @(<! conn-ch)
