@@ -26,7 +26,7 @@
                        [source-map-support "0.3.2"]
                        [ws "0.8.0"]]}
 
-  :source-paths ["src-lambda" "dev-lambda" "out-dev-lambda"]
+  :source-paths ["src-lambda" "dev-lambda"]
 
   :clean-targets ^{:protect false} ["out-lambda" "out-dev-lambda" "target"]
 
