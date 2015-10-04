@@ -62,7 +62,7 @@
 (defn s3-obj->conn
   [schema]
   (fn [[err obj]]
-    (let [conn (d/create-conn)]
+    (let [conn (d/create-conn schema)]
       (when-not err
         (let [db (string->db (goog.object/get obj "Body") schema)]
           (reset! conn db)))
