@@ -1,6 +1,7 @@
 (ns thisonesforthegirls.s3-dev
   (:require [cljs.core.async :refer [chan >! close!]]
             [cljs.nodejs :as node]
+            [clojure.string :as s]
             [com.stuartsierra.component :as component]
             [thisonesforthegirls.s3 :as s3])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -9,10 +10,11 @@
   s3/S3
   (get-obj-ch [_ bucket key-name]
     (let [ch (chan)
-          fs (node/require "fs")]
+          fs (node/require "fs")
+          filename (str bucket "/" (s/replace key-name "/" "___"))]
       (go
         (try
-          (let [body (.readFileSync fs (str bucket "/" key-name) "utf8")]
+          (let [body (.readFileSync fs filename "utf8")]
             ;; let bindings are unavailable to #js in go blocks
             ;; http://dev.clojure.org/jira/browse/ASYNC-117
             (>! ch [nil (clj->js {:Body body})]))
@@ -22,10 +24,11 @@
       ch))
   (put-obj!-ch [_ bucket key-name body]
     (let [ch (chan)
-          fs (node/require "fs")]
+          fs (node/require "fs")
+          filename (str bucket "/" (s/replace key-name "/" "___"))]
       (go
         (try
-          (.writeFileSync fs (str bucket "/" key-name) body "utf8")
+          (.writeFileSync fs filename body "utf8")
           (>! ch [nil "that totally worked"])
           (catch js/Object e
             (>! ch [e nil])))
