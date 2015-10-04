@@ -31,7 +31,9 @@
                       :ContentType "text/html"}]
       (s3/put-obj!-ch (:s3-conn lambda-fns) params))))
 
-;; Functions for export
+;;; Functions for export
+
+;; Private functions (not exposed through API Gateway)
 
 (defn set-admin-creds
   [lambda-fns]
@@ -66,6 +68,27 @@
             (throw (js/Error. err))
             "Secret set"))))))
 
+
+(defn generate-all-pages
+  [lambda-fns]
+  (fn [event context]
+    (let [{:keys [db html-bucket]} lambda-fns]
+      (go
+        (let [conn (<! (:conn-ch db))
+              db-data @conn
+              put-ch (->> (p/all-page-info db-data)
+                          (map (page-info->ch lambda-fns html-bucket))
+                          merge)]
+          (loop []
+            (let [[err :as val] (<! put-ch)]
+              (when err
+                (throw (js/Error. err)))
+              (when-not (nil? val)
+                (recur))))
+          "success")))))
+
+;; Public functions (exposed through API Gateway)
+
 (defn login
   [lambda-fns]
   (fn [event context]
@@ -86,21 +109,3 @@
           (if (.compareSync bcrypt password stored-hash)
             (u/get-login-token db)
             (throw (js/Error. "Wrong password"))))))))
-
-(defn generate-all-pages
-  [lambda-fns]
-  (fn [event context]
-    (let [{:keys [db html-bucket]} lambda-fns]
-      (go
-        (let [conn (<! (:conn-ch db))
-              db-data @conn
-              put-ch (->> (p/all-page-info db-data)
-                          (map (page-info->ch lambda-fns html-bucket))
-                          merge)]
-          (loop []
-            (let [[err :as val] (<! put-ch)]
-              (when err
-                (throw (js/Error. err)))
-              (when-not (nil? val)
-                (recur))))
-          "success")))))
