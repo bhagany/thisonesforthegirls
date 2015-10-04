@@ -6,7 +6,9 @@
 
 (defprotocol S3
   (get-obj-ch [this bucket key-name])
-  (put-obj!-ch [this params]))
+  (put-obj!-ch
+    [this bucket key-name body]
+    [this bucket key-name body options]))
 
 (defrecord S3Conn [conn]
   component/Lifecycle
@@ -32,10 +34,13 @@
                       (>! ch [err obj])
                       (close! ch))))
       ch))
-  (put-obj!-ch [_ params]
-    (let [ch (chan)]
+  (put-obj!-ch [this bucket key-name body]
+    (put-obj!-ch this bucket key-name body {}))
+  (put-obj!-ch [_ bucket key-name body options]
+    (let [ch (chan)
+          params (merge options {:Bucket bucket :Key key-name :Body body})]
       (.putObject conn
-                  params
+                  (clj->js params)
                   (fn [err obj]
                     (go
                       (>! ch [err obj])

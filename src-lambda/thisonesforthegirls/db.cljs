@@ -101,13 +101,8 @@
   (persist!-ch [_]
     (go
       (let [db @(<! conn-ch)
-            body (db->string db)
-            ;; let bindings are unavailable to #js in go blocks
-            ;; http://dev.clojure.org/jira/browse/ASYNC-117
-            params (clj->js {:Body body
-                             :Bucket bucket
-                             :Key key-name})]
-        (<! (s3/put-obj!-ch s3-conn params)))))
+            body (db->string db)]
+        (<! (s3/put-obj!-ch s3-conn bucket key-name body)))))
   (transact!-ch [this tx-data]
     (go
       (let [conn (<! conn-ch)]

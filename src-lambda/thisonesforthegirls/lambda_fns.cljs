@@ -22,14 +22,11 @@
 
 (defn page-info->ch
   [lambda-fns bucket]
-  (fn
-    [{:keys [s3-key body]}]
-    (let [params #js {:Bucket bucket
-                      :Key s3-key
-                      :Body body
-                      :ContentLength (count body)
-                      :ContentType "text/html"}]
-      (s3/put-obj!-ch (:s3-conn lambda-fns) params))))
+  (fn [{:keys [s3-key body]}]
+    (s3/put-obj!-ch (:s3-conn lambda-fns)
+                    bucket s3-key body
+                    {:ContentLength (count body)
+                     :ContentType "text/html"})))
 
 ;;; Functions for export
 
