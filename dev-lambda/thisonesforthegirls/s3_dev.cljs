@@ -28,8 +28,9 @@
           filename (str bucket "/" (s/replace key-name "/" "___"))]
       (go
         (try
-          (.writeFileSync fs filename body "utf8")
-          (>! ch [nil "that totally worked"])
+          (do
+            (.writeFileSync fs filename body "utf8")
+            (>! ch [nil "that totally worked"]))
           (catch js/Object e
             (>! ch [e nil])))
         (close! ch))
