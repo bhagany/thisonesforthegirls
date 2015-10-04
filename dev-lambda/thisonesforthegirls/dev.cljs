@@ -14,7 +14,7 @@
             :port 8080}
    :db {:bucket "/www/thisonesforthegirls/private"
         :key "db"}
-   :lambda-fns {:html-bucket "thisonesforthegirls.org"}})
+   :lambda-fns {:html-bucket "/www/thisonesforthegirls/public"}})
 
 (defn dev-system [config]
   (component/system-map
