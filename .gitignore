@@ -7,6 +7,9 @@ pom.xml
 .lein*
 .cljs_node_repl
 .nrepl-port
+figwheel_server.log
 node_modules
 out*
 target
+public
+private
