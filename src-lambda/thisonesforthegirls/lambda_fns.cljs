@@ -65,7 +65,6 @@
             (throw (js/Error. err))
             "Secret set"))))))
 
-
 (defn generate-all-pages
   [lambda-fns]
   (fn [event context]
