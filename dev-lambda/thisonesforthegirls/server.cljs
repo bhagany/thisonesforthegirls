@@ -1,29 +1,53 @@
 (ns thisonesforthegirls.server
   (:require [cljs.nodejs :as node]
+            [clojure.string :as s]
             [com.stuartsierra.component :as component]
-            [thisonesforthegirls.lambda-fns :as l]))
+            [thisonesforthegirls.lambda-fns :as l])
+  (:import [goog.object]
+           [goog.string]))
 
 (defn lambda-middleware
   [lambda-fns]
   (fn [request response next]
     (let [body (.parse js/JSON (.-body request))
-          res-text (case (.url request)
+          res-text (case (.-url request)
                      "/login" ((l/login lambda-fns) body {})
                      "404")]
       (.end response res-text))))
 
-(defrecord DevServer [dir port server lambda-fns]
+(defn static-headers
+  [response path]
+  (let [content-type (cond
+                       (goog.string/endsWith path ".png") "image/png"
+                       (goog.string/endsWith path ".gif") "image/gif"
+                       (goog.string/endsWith path ".jpg") "image/jpg"
+                       (goog.string/endsWith path ".css") "text/css"
+                       :else "text/html")]
+    (.setHeader response "Content-Type" content-type)))
+
+(defn static-middleware
+  [dir]
+  (fn [request response next]
+    (let [serve-static (node/require "serve-static")
+          static (serve-static dir #js {:index #js ["home"]
+                                        :setHeaders static-headers})
+          ;; need to not replace first /
+          filename (str "/"
+                        (s/replace (subs (.-url request) 1) "/" "___"))]
+      (goog.object/set request "url" filename)
+      (static request response next))))
+
+(defrecord DevServer [html-dir asset-dir port server lambda-fns]
   component/Lifecycle
   (start [this]
     (if-not server
       (let [http (node/require "http")
             connect (node/require "connect")
-            serve-static (node/require "serve-static")
             app (connect)
-            static (serve-static dir #js {:index #js ["home"]})
             server* (.createServer http app)]
         (.use app "/lambda-fns" (lambda-middleware lambda-fns))
-        (.use app "/" static)
+        (.use app "/assets" (static-middleware asset-dir))
+        (.use app "/" (static-middleware html-dir))
         (.listen server* port)
         (assoc this :server server*))
       this))
@@ -33,9 +57,9 @@
     (assoc this :server nil)))
 
 (defn dev-server
-  ([dir]
-   (dev-server dir 8080))
-  ([dir port]
+  ([html-dir asset-dir]
+   (dev-server html-dir asset-dir 8080))
+  ([html-dir asset-dir port]
    (component/using
-    (map->DevServer {:dir dir :port port})
+    (map->DevServer {:html-dir html-dir :asset-dir asset-dir :port port})
     [:lambda-fns])))

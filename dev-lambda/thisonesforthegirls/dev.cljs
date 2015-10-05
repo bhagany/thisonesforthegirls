@@ -10,7 +10,8 @@
 (node/enable-util-print!)
 
 (def config
-  {:server {:dir "/www/thisonesforthegirls/public"
+  {:server {:html-dir "/www/thisonesforthegirls/public"
+            :asset-dir "/www/thisonesforthegirls/assets"
             :port 8080}
    :db {:bucket "/www/thisonesforthegirls/private"
         :key "db"}
@@ -18,7 +19,8 @@
 
 (defn dev-system [config]
   (component/system-map
-   :server (serv/dev-server (get-in config [:server :dir])
+   :server (serv/dev-server (get-in config [:server :html-dir])
+                            (get-in config [:server :asset-dir])
                             (get-in config [:server :port]))
    :s3-conn (s3/s3-dev-connection)
    :db (db/datascript-db (get-in config [:db :bucket])

@@ -26,12 +26,18 @@
     (let [ch (chan)
           fs (node/require "fs")
           filename (str bucket "/" (s/replace key-name "/" "___"))]
+      (try
+        (let [stats (.lstatSync fs bucket)]
+          (when-not (.isDirectory stats)
+            (println (str bucket " exists, but is not a directory"))))
+        (catch :default e
+          (.mkdirSync fs bucket)))
       (go
         (try
           (do
-            (.writeFileSync fs filename body "utf8")
+            (.writeFileSync fs (str bucket "/" key-name) body "utf8")
             (>! ch [nil "that totally worked"]))
-          (catch js/Object e
+          (catch :default e
             (>! ch [e nil])))
         (close! ch))
       ch))
