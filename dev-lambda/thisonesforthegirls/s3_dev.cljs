@@ -35,7 +35,7 @@
       (go
         (try
           (do
-            (.writeFileSync fs (str bucket "/" key-name) body "utf8")
+            (.writeFileSync fs filename body "utf8")
             (>! ch [nil "that totally worked"]))
           (catch :default e
             (>! ch [e nil])))
