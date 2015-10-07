@@ -10,12 +10,12 @@
 (node/enable-util-print!)
 
 (def config
-  {:server {:html-dir "/www/thisonesforthegirls/public"
+  {:server {:html-dir "/www/thisonesforthegirls/fake-s3/public"
             :asset-dir "/www/thisonesforthegirls/assets"
             :port 8080}
-   :db {:bucket "/www/thisonesforthegirls/private"
+   :db {:bucket "/www/thisonesforthegirls/fake-s3/private"
         :key "db"}
-   :lambda-fns {:html-bucket "/www/thisonesforthegirls/public"}})
+   :lambda-fns {:html-bucket "/www/thisonesforthegirls/fake-s3/public"}})
 
 (defn dev-system [config]
   (component/system-map
