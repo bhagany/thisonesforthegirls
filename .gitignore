@@ -11,5 +11,4 @@ figwheel_server.log
 node_modules
 out*
 target
-public
-private
+fake-s3/*
