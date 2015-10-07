@@ -6,7 +6,6 @@
                  [datascript "0.13.0"]
                  [datascript-transit "0.2.0" :exclusions [com.cognitect/transit-clj
                                                           com.cognitect/transit-cljs]]
-                 [figwheel "0.4.0"]
                  [hiccups "0.3.0"]
                  [io.nervous/cljs-lambda "0.1.2"]
                  [org.clojure/clojure "1.7.0"]
@@ -49,6 +48,7 @@
                                    :source-map true}}
                        {:id "dev-lambda"
                         :source-paths ["src-lambda" "dev-lambda"]
+                        :figwheel true
                         :compiler {:main thisonesforthegirls.dev
                                    :output-to "out-dev-lambda/thisonesforthegirls.js"
                                    :output-dir "out-dev-lambda"

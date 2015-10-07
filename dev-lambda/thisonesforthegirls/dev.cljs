@@ -1,7 +1,6 @@
 (ns thisonesforthegirls.dev
   (:require [cljs.nodejs :as node]
             [com.stuartsierra.component :as component]
-            [figwheel.client :as fw]
             [thisonesforthegirls.db :as db]
             [thisonesforthegirls.lambda-fns :as l]
             [thisonesforthegirls.s3-dev :as s3]
@@ -33,5 +32,3 @@
   []
   (reset! system (component/start (dev-system config))))
 (set! *main-cli-fn* -main)
-
-(fw/start {:build-id "dev-lambda"})
