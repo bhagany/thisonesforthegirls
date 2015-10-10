@@ -26,15 +26,15 @@
     (.setHeader response "Content-Type" content-type)))
 
 (defn static-middleware
-  [dir]
+  [dir s3-like]
   (fn [request response next]
     (let [serve-static (node/require "serve-static")
           static (serve-static dir #js {:index #js ["home"]
-                                        :setHeaders static-headers})
-          ;; need to not replace first /
-          filename (str "/"
-                        (s/replace (subs (.-url request) 1) "/" "___"))]
-      (goog.object/set request "url" filename)
+                                        :setHeaders static-headers})]
+      (when s3-like
+        ;; need to not replace first /
+        (let [filename (str "/" (s/replace (subs (.-url request) 1) "/" "___"))]
+          (goog.object/set request "url" filename)))
       (static request response next))))
 
 (defrecord DevServer [html-dir asset-dir port server lambda-fns]
@@ -46,8 +46,8 @@
             app (connect)
             server* (.createServer http app)]
         (.use app "/lambda-fns" (lambda-middleware lambda-fns))
-        (.use app "/assets" (static-middleware asset-dir))
-        (.use app "/" (static-middleware html-dir))
+        (.use app "/assets" (static-middleware asset-dir false))
+        (.use app "/" (static-middleware html-dir true))
         (.listen server* port)
         (assoc this :server server*))
       this))
