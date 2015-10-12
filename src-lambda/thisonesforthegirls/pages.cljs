@@ -20,7 +20,8 @@
                      :content "text/html; charset=UTF-8"}]
              [:meta {:http-equiv "Content-Language" :content "en-US"}]
              [:link {:href "/assets/girls.css" :media "screen"
-                     :rel "stylesheet" :type "text/css"}]]
+                     :rel "stylesheet" :type "text/css"}]
+             [:link {:rel "icon" :href "/assets/favicon.png"}]]
             (into
              [:body
               (into
