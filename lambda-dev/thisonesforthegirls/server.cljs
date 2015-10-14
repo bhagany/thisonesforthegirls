@@ -2,26 +2,28 @@
   (:require [cljs.nodejs :as node]
             [clojure.string :as s]
             [com.stuartsierra.component :as component]
-            [thisonesforthegirls.lambda-fns :as l])
+            [thisonesforthegirls.lambda-fns :as l]
+            [thisonesforthegirls.pages :as p])
   (:import [goog.object]
            [goog.string]))
 
 (defn lambda-middleware
   [lambda-fns]
   (fn [request response next]
-    (let [body (.parse js/JSON (.-body request))
+    (let [_ (println (.-body request))
+          body (.parse js/JSON (.-body request))
           res-text (case (.-url request)
                      "/login" ((l/login lambda-fns) body {})
-                     "404")]
+                     (p/login-form "testing"))]
       (.end response res-text))))
 
 (defn static-headers
   [response path]
   (let [content-type (cond
-                       (ends-with? path ".png") "image/png"
-                       (ends-with? path ".gif") "image/gif"
-                       (ends-with? path ".jpg") "image/jpg"
-                       (ends-with? path ".css") "text/css"
+                       (s/ends-with? path ".png") "image/png"
+                       (s/ends-with? path ".gif") "image/gif"
+                       (s/ends-with? path ".jpg") "image/jpg"
+                       (s/ends-with? path ".css") "text/css"
                        :else "text/html")]
     (.setHeader response "Content-Type" content-type)))
 
