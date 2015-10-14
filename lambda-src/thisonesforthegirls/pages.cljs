@@ -62,19 +62,8 @@
   (base-template
    title
    [[:div#admin
-     [:img {:src "/assets/administration.gif" :alt "Administration"}]
-     [:ul.adminFooter
-      [:li [:a {:href "/admin"} "Admin Home "]]
-      [:li [:span.sep "|"] [:a {:href "/admin/welcome"} " Welcome "]]
-      [:li [:span.sep "|"] [:a {:href "/admin/about"} " About Us "]]
-      [:li [:span.sep "|"] [:a {:href "/admin/devotions"} " Devotions "]]
-      [:li [:span.sep "|"] [:a {:href "/admin/scripture"} " Scripture "]]
-      [:li [:span.sep "|"] [:a {:href "/admin/testimonies"} " Testimonies "]]
-      [:li [:span.sep "|"] [:a {:href "/admin/community-resources"}
-                            " Community Resources "]]
-      [:li [:span.sep "|"] [:a {:href "/admin/contact"} " Contact Us "]]
-      [:li [:span.sep "|"] [:a {:href "/admin/logout"} " Log out "]]]]]
-   [[:script {:type "text/javascript" :src "/assets/admin.js"}]]))
+     [:img {:src "/assets/administration.gif" :alt "Administration"}]]]
+   [[:script {:type "text/javascript" :src "/assets/js/admin.js"}]]))
 
 (defn site-template
   [title main-content]
@@ -291,3 +280,18 @@
     (-> defined
         (into s-cats)
         (into tmonies))))
+
+;; Admin page fragments
+
+(def admin-footer
+  [:ul.adminFooter
+   [:li [:a {:href "/admin"} "Admin Home "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/welcome"} " Welcome "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/about"} " About Us "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/devotions"} " Devotions "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/scripture"} " Scripture "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/testimonies"} " Testimonies "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/community-resources"}
+                         " Community Resources "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/contact"} " Contact Us "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/logout"} " Log out "]]])
