@@ -18,10 +18,10 @@
 (defn static-headers
   [response path]
   (let [content-type (cond
-                       (goog.string/endsWith path ".png") "image/png"
-                       (goog.string/endsWith path ".gif") "image/gif"
-                       (goog.string/endsWith path ".jpg") "image/jpg"
-                       (goog.string/endsWith path ".css") "text/css"
+                       (ends-with? path ".png") "image/png"
+                       (ends-with? path ".gif") "image/gif"
+                       (ends-with? path ".jpg") "image/jpg"
+                       (ends-with? path ".css") "text/css"
                        :else "text/html")]
     (.setHeader response "Content-Type" content-type)))
 
