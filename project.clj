@@ -19,6 +19,7 @@
 
   :npm {:dependencies [[aws-sdk "2.1.50"]
                        [bcryptjs "2.2.1"]
+                       [body-parser "1.14.1"]
                        [connect "3.4.0"]
                        [jsonwebtoken "5.0.5"]
                        [serve-static "1.10.0"]

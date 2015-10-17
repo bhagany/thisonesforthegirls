@@ -56,8 +56,10 @@
     (if-not server
       (let [http (node/require "http")
             connect (node/require "connect")
+            parser (node/require "body-parser")
             app (connect)
             server* (.createServer http app)]
+        (.use app "/lambda-fns" (.text parser #js {:type "*/*"}))
         (.use app "/lambda-fns" (lambda-middleware lambda-fns))
         (.use app "/assets/js" (static-middleware js-dir false))
         (.use app "/assets" (static-middleware asset-dir false))
