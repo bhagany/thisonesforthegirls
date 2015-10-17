@@ -50,7 +50,6 @@
   [db token]
   (let [jwt (node/require "jsonwebtoken")
         secret (get-secret db)]
-    (println (.verify jwt token secret #js {:algorithms #js ["HS512"]}))
     (try
       (-> (.verify jwt token secret #js {:algorithms #js ["HS512"]})
           (goog.object/get "admin"))
