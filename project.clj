@@ -26,7 +26,7 @@
                        [source-map-support "0.3.2"]
                        [ws "0.8.0"]]}
 
-  :source-paths ["lambda-src" "lambda-dev"]
+  :source-paths ["lambda-src" "lambda-dev" "browser-src" "browser-dev"]
 
   :clean-targets ^{:protect false} ["out" "target"]
 
@@ -57,5 +57,22 @@
                                    :output-dir "out/lambda-dev"
                                    :target :nodejs
                                    :optimizations :none
-                                   :source-map true}}]}
+                                   :source-map true}}
+                       {:id "browser"
+                        :source-paths ["browser-src"]
+                        :compiler {:main thisonesforthegirls.admin
+                                   :output-to "out/browser/admin.js"
+                                   :output-dir "out/browser/admin"
+                                   :asset-path "assets/js/admin"
+                                   :closure-defines {:thisonesforthegirls.admin.admin_page_url "/lambda-fns/admin-page"}
+                                   :optimizations :advanced}}
+                       {:id "browser-dev"
+                        :source-paths ["browser-src" #_"dev-browser"]
+                        :figwheel true
+                        :compiler {:main thisonesforthegirls.admin
+                                   :output-to "out/browser-dev/admin.js"
+                                   :output-dir "out/browser-dev/admin"
+                                   :asset-path "assets/js/admin"
+                                   :closure-defines {:thisonesforthegirls.admin.admin_page_url "/lambda-fns/admin-page"}
+                                   :optimizations :none}}]}
   :figwheel {})
