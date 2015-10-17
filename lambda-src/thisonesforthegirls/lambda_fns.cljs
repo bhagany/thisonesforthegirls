@@ -142,7 +142,6 @@
             {:keys [pages db]} lambda-fns
             conn (<! (:conn-ch db))]
         ;; check token, return login form if bad
-        (println (check-login-token @conn jwt))
         (if (check-login-token @conn jwt)
           (case path
             "" (p/admin-home pages)
