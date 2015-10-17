@@ -16,7 +16,7 @@
   [html-bucket]
   (component/using
    (map->LambdaFns {:html-bucket html-bucket})
-   [:db :s3-conn]))
+   [:db :s3-conn :pages]))
 
 ;; Helpers
 
