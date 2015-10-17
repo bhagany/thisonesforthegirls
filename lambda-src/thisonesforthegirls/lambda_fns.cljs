@@ -28,6 +28,35 @@
                     {:ContentLength (count body)
                      :ContentType "text/html"})))
 
+(defn get-secret
+  [db]
+  (d/q '[:find ?secret .
+         :where
+         [?e :db/ident :secret]
+         [?e :secret ?secret]]
+       db))
+
+(defn make-login-token
+  [db]
+  (let [jwt (node/require "jsonwebtoken")
+        secret (get-secret db)]
+    (.sign jwt
+           #js {:admin true}
+           secret
+           #js {:algorithm "HS512"
+                :expiresInMinutes 1440})))
+
+(defn check-login-token
+  [db token]
+  (let [jwt (node/require "jsonwebtoken")
+        secret (get-secret db)]
+    (println (.verify jwt token secret #js {:algorithms #js ["HS512"]}))
+    (try
+      (-> (.verify jwt token secret #js {:algorithms #js ["HS512"]})
+          (goog.object/get "admin"))
+      (catch (goog.object/get jwt "JsonWebTokenError") e
+        false))))
+
 ;;; Functions for export
 
 ;; Private functions (not exposed through API Gateway)
@@ -88,20 +117,21 @@
 (defn login
   [lambda-fns]
   (fn [event context]
-    (let [{:keys [username password]} event
+    (let [{:keys [body]} event
+          {:keys [username password]} body
           {:keys [db]} lambda-fns
           bcrypt (node/require "bcryptjs")]
       (go
         (let [conn (<! (:conn-ch db))
-              db-data @conn
               stored-hash (d/q '[:find ?password .
                                  :in $ ?username
                                  :where
                                  [?e :db/ident :admin]
                                  [?e :user/name ?username]
                                  [?e :user/password ?password]]
-                               db-data
+                               @conn
                                username)]
-          (if (.compareSync bcrypt password stored-hash)
-            (u/get-login-token db)
-            (throw (js/Error. "Wrong password"))))))))
+          (cond
+            (some nil? [username password]) (throw (js/Error. "Creds missing"))
+            (.compareSync bcrypt password stored-hash) (make-login-token @conn)
+            :else (throw (js/Error. "Wrong password"))))))))
