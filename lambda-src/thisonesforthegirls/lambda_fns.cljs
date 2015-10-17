@@ -97,11 +97,9 @@
 (defn generate-all-pages
   [lambda-fns]
   (fn [event context]
-    (let [{:keys [db html-bucket]} lambda-fns]
+    (let [{:keys [db html-bucket pages]} lambda-fns]
       (go
-        (let [conn (<! (:conn-ch db))
-              db-data @conn
-              put-ch (->> (p/all-page-info db-data)
+        (let [put-ch (->> (p/all-page-info pages)
                           (map (page-info->ch lambda-fns html-bucket))
                           merge)]
           (loop []

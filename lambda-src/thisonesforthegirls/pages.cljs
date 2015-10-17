@@ -1,9 +1,11 @@
 (ns thisonesforthegirls.pages
-  (:require [datascript.core :as d]
+  (:require [com.stuartsierra.component :as component]
+            [datascript.core :as d]
             [hiccups.runtime])
   (:import [goog.date Date])
   (:require-macros [hiccups.core :as hiccups :refer [html]]))
 
+;; Templates and helpers
 
 (defn base-template
   ([title main-content]
@@ -78,35 +80,6 @@
 
 (def text-query '[:find ?text . :in $ ?e :where [?e :page/text ?text]])
 
-(defn home
-  [db]
-  (let [text (d/q text-query db [:db/ident :home])]
-    (site-template
-     "Welcome"
-     [[:div#welcome [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
-       [:p text]
-       [:img#youare {:src "/assets/you-are.gif"
-                     :alt "You are loved..."}]]])))
-
-(defn about-us
-  [db]
-  (let [text (d/q text-query db [:db/ident :about-us])]
-    (site-template
-     "About Us"
-     [[:div#about
-       [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
-       [:p text]]])))
-
-(defn resources
-  [db]
-  (let [text (d/q text-query db [:db/ident :resources])]
-    (site-template
-     "Community Resources"
-     [[:div#resources
-       [:img.header {:src "/assets/community-resources.gif"
-                     :alt "Community Resources"}]
-       [:p text]]])))
-
 (defn devotion-markup
   [dev]
   [[:dt
@@ -114,50 +87,13 @@
     [:span.dAuthor (str "by " (:devotion/author dev))]]
    [:dd (:devotion/body dev)]])
 
-(defn featured-devotion
-  [db]
-  (let [devotion (d/q '[:find (pull ?e [*]) .
-                        :where [?e :devotion/featured? true]] db)]
-    (site-template
-     "Devotions"
-     [[:div#devotions
-       [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
-       (into [:dl] (devotion-markup devotion))
-       [:p [:a {:href "/devotions/archive"} "Read more"]]]])))
-
 (defn devotion-list-item
   [dev]
   [:li [:a {:href (str "#" (:db/id dev))}]])
 
-(defn archived-devotions
-  [db]
-  (let [devotions (->> (d/q '[:find [(pull ?e [*]) ...]
-                              :where [?e :devotion/featured? false]] db)
-                       (sort-by :devotion/created-at #(compare %2 %1)))]
-    (site-template
-     "Devotions Archive"
-     [[:div#devotions
-       [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
-       [:a {:href "/devotions"} "Back to Featured Devotion"]
-                     [:h3 "Archive"]
-                     [:ul (map devotion-list-item devotions)]
-                     [:dl (mapcat devotion-markup devotions)]
-                     [:a {:href "/devotions"} "Back to Featured Devotion"]]])))
-
 (defn scripture-category-list-item
   [category]
   [:li [:a {:href (str "/scripture/" (:scripture-category/slug category))}]])
-
-(defn scripture-categories
-  [db]
-  (let [categories (->> (d/q '[:find [(pull ?e [*]) ...]
-                               :where [?e :scripture-category/name]] db)
-                        (sort-by :scripture-category/name))]
-    (site-template
-     "Scripture"
-     [[:div#scripture
-       [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
-       [:ul (map scripture-category-list-item categories)]]])))
 
 (defn scripture-markup
   [scripture]
@@ -181,17 +117,6 @@
 (defn testimony-list-item
   [testimony]
   [:li [:a {:href (str "/testimonies/" (:testimony/slug testimony))}]])
-
-(defn testimonies
-  [db]
-  (let [testimonies (->> (d/q '[:find [(pull ?e [*]) ...]
-                                :where [?e :testimony/title]] db)
-                         (sort-by :testimony/title))]
-    (site-template
-     "Testimonies"
-     [[:div#testimonies
-       [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]
-       [:ul (map testimony-list-item testimonies)]]])))
 
 (defn testimony
   [testimony]
@@ -240,22 +165,133 @@
    "Error"
    [error-fragment]))
 
+;; Admin page fragments
+
+(def admin-footer
+  [:ul.adminFooter
+   [:li [:a {:href "/admin"} "Admin Home "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/welcome"} " Welcome "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/about"} " About Us "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/devotions"} " Devotions "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/scripture"} " Scripture "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/testimonies"} " Testimonies "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/community-resources"}
+                         " Community Resources "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/contact"} " Contact Us "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/logout"} " Log out "]]])
+
+;; TODO: I need to know the url for lambda functions here
+;; Possibly should make pages a component
+
+(defrecord PageConfig [lambda-base db])
+
+(defn pages
+  [lambda-base]
+  (component/using
+   (map->PageConfig {:lambda-base lambda-base})
+   [:db]))
+
+(defn home
+  [pages]
+  (let [{:keys [db]} pages
+        text (d/q text-query db [:db/ident :home])]
+    (site-template
+     "Welcome"
+     [[:div#welcome [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
+       [:p text]
+       [:img#youare {:src "/assets/you-are.gif"
+                     :alt "You are loved..."}]]])))
+
+(defn about-us
+  [pages]
+  (let [{:keys [db]} pages
+        text (d/q text-query db [:db/ident :about-us])]
+    (site-template
+     "About Us"
+     [[:div#about
+       [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
+       [:p text]]])))
+
+(defn resources
+  [pages]
+  (let [{:keys [db]} pages
+        text (d/q text-query db [:db/ident :resources])]
+    (site-template
+     "Community Resources"
+     [[:div#resources
+       [:img.header {:src "/assets/community-resources.gif"
+                     :alt "Community Resources"}]
+       [:p text]]])))
+
+(defn featured-devotion
+  [pages]
+  (let [{:keys [db]} pages
+        devotion (d/q '[:find (pull ?e [*]) .
+                        :where [?e :devotion/featured? true]] db)]
+    (site-template
+     "Devotions"
+     [[:div#devotions
+       [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
+       (into [:dl] (devotion-markup devotion))
+       [:p [:a {:href "/devotions/archive"} "Read more"]]]])))
+
+(defn archived-devotions
+  [pages]
+  (let [{:keys [db]} pages
+        devotions (->> (d/q '[:find [(pull ?e [*]) ...]
+                              :where [?e :devotion/featured? false]] db)
+                       (sort-by :devotion/created-at #(compare %2 %1)))]
+    (site-template
+     "Devotions Archive"
+     [[:div#devotions
+       [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
+       [:a {:href "/devotions"} "Back to Featured Devotion"]
+                     [:h3 "Archive"]
+                     [:ul (map devotion-list-item devotions)]
+                     [:dl (mapcat devotion-markup devotions)]
+                     [:a {:href "/devotions"} "Back to Featured Devotion"]]])))
+
+(defn scripture-categories
+  [pages]
+  (let [{:keys [db]} pages
+        categories (->> (d/q '[:find [(pull ?e [*]) ...]
+                               :where [?e :scripture-category/name]] db)
+                        (sort-by :scripture-category/name))]
+    (site-template
+     "Scripture"
+     [[:div#scripture
+       [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
+       [:ul (map scripture-category-list-item categories)]]])))
+
+(defn testimonies
+  [pages]
+  (let [{:keys [db]} pages
+        testimonies (->> (d/q '[:find [(pull ?e [*]) ...]
+                                :where [?e :testimony/title]] db)
+                         (sort-by :testimony/title))]
+    (site-template
+     "Testimonies"
+     [[:div#testimonies
+       [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]
+       [:ul (map testimony-list-item testimonies)]]])))
+
 (defn all-page-info
-  [db]
-  (let [defined [{:s3-key "home"
-                  :body (home db)}
+  [pages]
+  (let [{:keys [db]} pages
+        defined [{:s3-key "home"
+                  :body (home pages)}
                  {:s3-key "about"
-                  :body (about-us db)}
+                  :body (about-us pages)}
                  {:s3-key "community-resources"
-                  :body (resources db)}
+                  :body (resources pages)}
                  {:s3-key "devotions"
-                  :body (featured-devotion db)}
+                  :body (featured-devotion pages)}
                  {:s3-key "devotions/archive"
-                  :body (archived-devotions db)}
+                  :body (archived-devotions pages)}
                  {:s3-key "scripture"
-                  :body (scripture-categories db)}
+                  :body (scripture-categories pages)}
                  {:s3-key "testimonies"
-                  :body (testimonies db)}
+                  :body (testimonies pages)}
                  {:s3-key "contact"
                   :body contact-us}
                  {:s3-key "error"
@@ -284,17 +320,29 @@
         (into s-cats)
         (into tmonies))))
 
-;; Admin page fragments
+(defn login-form
+  [pages]
+  (let [{:keys [lambda-base]} pages]
+    (html
+     [:img.header {:src "/assets/login.gif" :alt "Login"}]
+     [:form {:action (str lambda-base "login") :method "post"}
+      [:dl
+       [:dt [:label {:for "username"} "Username"]]
+       [:dd [:input {:type "text" :name "username"}]]
+       [:dt [:label {:for "password"} "Password"]]
+       [:dd [:input {:type "password" :name "password"}]]
+       [:dt "&nbsp;"]
+       [:dd [:input {:type "submit" :value "Login"}]]]])))
 
-(def admin-footer
-  [:ul.adminFooter
-   [:li [:a {:href "/admin"} "Admin Home "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/welcome"} " Welcome "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/about"} " About Us "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/devotions"} " Devotions "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/scripture"} " Scripture "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/testimonies"} " Testimonies "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/community-resources"}
-                         " Community Resources "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/contact"} " Contact Us "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/logout"} " Log out "]]])
+(defn admin-home
+  [pages]
+  (html
+   [:h2 "Click on the links below to do stuff"]
+   [:p
+    "Hello TOFTG Administrators! The links on the left will take you to the "
+    "regular site. The links below will allow you to modify the regular site. "
+    "Choose accordingly"]
+   [:h4 "Administration Links"]
+   admin-footer))
+
+(def admin-error (html error-fragment))

@@ -3,6 +3,7 @@
             [com.stuartsierra.component :as component]
             [thisonesforthegirls.db :as db]
             [thisonesforthegirls.lambda-fns :as l]
+            [thisonesforthegirls.pages :as p]
             [thisonesforthegirls.s3-dev :as s3]
             [thisonesforthegirls.server :as serv]))
 
@@ -15,7 +16,8 @@
             :port 8080}
    :db {:bucket "/www/thisonesforthegirls/fake-s3/private"
         :key "db"}
-   :lambda-fns {:html-bucket "/www/thisonesforthegirls/fake-s3/public"}})
+   :lambda-fns {:html-bucket "/www/thisonesforthegirls/fake-s3/public"}
+   :pages {:lambda-base "/lambda-fns/"}})
 
 (defn dev-system [config]
   (component/system-map
@@ -26,7 +28,8 @@
    :s3-conn (s3/s3-dev-connection)
    :db (db/datascript-db (get-in config [:db :bucket])
                          (get-in config [:db :key]))
-   :lambda-fns (l/lambda-fns (get-in config [:lambda-fns :html-bucket]))))
+   :lambda-fns (l/lambda-fns (get-in config [:lambda-fns :html-bucket]))
+   :pages (p/pages (get-in config [:pages :lambda-base]))))
 
 (defonce system (atom nil))
 
