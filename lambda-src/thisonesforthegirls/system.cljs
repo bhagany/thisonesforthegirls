@@ -37,10 +37,14 @@
   [event context]
   (with-started-system l/set-token-secret system event context))
 
+(defn ^:export generate-all-pages
+  [event context]
+  (with-started-system l/generate-all-pages system event context))
+
 (defn ^:export login
   [event context]
   (with-started-system l/login system event context))
 
-(defn ^:export generate-all-pages
+(defn ^:export admin-page
   [event context]
-  (with-started-system l/generate-all-pages system event context))
+  (with-started-system l/admin-page system event context))

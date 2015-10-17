@@ -22,6 +22,7 @@
                  :method (goog.object/get request "method")
                  :body (js->clj body :keywordize-keys true)}
           res-fn (case (goog.object/get request "url")
+                   "/admin-page" (l/admin-page lambda-fns)
                    "/login" (l/login lambda-fns))]
       (go
         ;; TODO: catch errors, fail nicely

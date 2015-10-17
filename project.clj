@@ -35,10 +35,12 @@
                              :invoke thisonesforthegirls.system/set-admin-creds}
                             {:name   "set-token-secret"
                              :invoke thisonesforthegirls.system/set-token-secret}
+                            {:name   "generate-all-pages"
+                             :invoke thisonesforthegirls.system/generate-all-pages}
                             {:name   "login"
                              :invoke thisonesforthegirls.system/login}
-                            {:name   "generate-all-pages"
-                             :invoke thisonesforthegirls.system/generate-all-pages}]}
+                            {:name   "admin-page"
+                             :invoke thisonesforthegirls.system/admin-page}]}
 
   :cljsbuild {:builds [{:id "lambda"
                         :source-paths ["lambda-src"]

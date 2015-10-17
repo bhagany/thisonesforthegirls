@@ -133,3 +133,19 @@
             (some nil? [username password]) (throw (js/Error. "Creds missing"))
             (.compareSync bcrypt password stored-hash) (make-login-token @conn)
             :else (throw (js/Error. "Wrong password"))))))))
+
+(defn admin-page
+  [lambda-fns]
+  (fn [event context]
+    (go
+      (let [{:keys [body jwt]} event
+            {:keys [path]} body
+            {:keys [pages db]} lambda-fns
+            conn (<! (:conn-ch db))]
+        ;; check token, return login form if bad
+        (println (check-login-token @conn jwt))
+        (if (check-login-token @conn jwt)
+          (case path
+            "" (p/admin-home pages)
+            p/admin-error)
+          (p/login-form pages))))))
