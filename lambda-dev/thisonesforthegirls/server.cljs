@@ -1,21 +1,32 @@
 (ns thisonesforthegirls.server
-  (:require [cljs.nodejs :as node]
+  (:require [cljs.core.async :refer [<!]]
+            [cljs.nodejs :as node]
             [clojure.string :as s]
             [com.stuartsierra.component :as component]
             [thisonesforthegirls.lambda-fns :as l]
             [thisonesforthegirls.pages :as p])
   (:import [goog.object]
-           [goog.string]))
+           [goog.string])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn lambda-middleware
   [lambda-fns]
   (fn [request response next]
-    (let [_ (println (.-body request))
-          body (.parse js/JSON (.-body request))
-          res-text (case (.-url request)
-                     "/login" ((l/login lambda-fns) body {})
-                     (p/login-form "testing"))]
-      (.end response res-text))))
+    (let [{:keys [pages]} lambda-fns
+          req-body (goog.object/get request "body")
+          body (if (string? req-body)
+                 (.parse js/JSON req-body)
+                 req-body)
+          headers (goog.object/get request "headers")
+          event {:jwt (goog.object/get headers "x-jwt")
+                 :method (goog.object/get request "method")
+                 :body (js->clj body :keywordize-keys true)}
+          res-fn (case (goog.object/get request "url")
+                   "/login" (l/login lambda-fns))]
+      (go
+        ;; TODO: catch errors, fail nicely
+        (let [res-text (<! (res-fn event {}))]
+          (.end response res-text))))))
 
 (defn static-headers
   [response path]
