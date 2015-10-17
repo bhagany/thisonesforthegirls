@@ -229,13 +229,16 @@
        [:dd [:input#submit {:type "submit" :name "submit"
                             :value "Submit"}]]]]]]))
 
+(def error-fragment
+  [:div#error
+   [:h1 "Error"]
+   [:p "We couldn't find what you were looking for"]
+   [:p [:a {:href "/"} "Go back to the home page"]]])
+
 (def error
   (site-template
    "Error"
-   [[:div#error
-     [:h1 "Error"]
-     [:p "We couldn't find what you were looking for"]
-     [:p [:a {:href "/"} "Go back to the home page"]]]]))
+   [error-fragment]))
 
 (defn all-page-info
   [db]
