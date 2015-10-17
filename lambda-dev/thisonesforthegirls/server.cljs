@@ -39,7 +39,7 @@
           (goog.object/set request "url" filename)))
       (static request response next))))
 
-(defrecord DevServer [html-dir asset-dir port server lambda-fns]
+(defrecord DevServer [html-dir asset-dir js-dir port server lambda-fns]
   component/Lifecycle
   (start [this]
     (if-not server
@@ -48,6 +48,7 @@
             app (connect)
             server* (.createServer http app)]
         (.use app "/lambda-fns" (lambda-middleware lambda-fns))
+        (.use app "/assets/js" (static-middleware js-dir false))
         (.use app "/assets" (static-middleware asset-dir false))
         (.use app "/" (static-middleware html-dir true))
         (.listen server* port)
@@ -59,9 +60,10 @@
     (assoc this :server nil)))
 
 (defn dev-server
-  ([html-dir asset-dir]
-   (dev-server html-dir asset-dir 8080))
-  ([html-dir asset-dir port]
+  ([html-dir asset-dir js-dir]
+   (dev-server html-dir asset-dir js-dir 8080))
+  ([html-dir asset-dir js-dir port]
    (component/using
-    (map->DevServer {:html-dir html-dir :asset-dir asset-dir :port port})
+    (map->DevServer {:html-dir html-dir :asset-dir asset-dir
+                     :js-dir js-dir :port port})
     [:lambda-fns])))
