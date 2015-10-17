@@ -26,9 +26,16 @@
                          (get-in config [:db :key]))
    :lambda-fns (l/lambda-fns (get-in config [:lambda-fns :html-bucket]))))
 
-(def system (atom nil))
+(defonce system (atom nil))
+
+;; TODO: figure out how to stop and start components when figwheel reloads
 
 (defn -main
   []
-  (reset! system (component/start (dev-system config))))
+  (if @system
+    (do
+      (swap! system component/stop)
+      (swap! system component/start))
+    (reset! system (component/start (dev-system config)))))
+
 (set! *main-cli-fn* -main)
