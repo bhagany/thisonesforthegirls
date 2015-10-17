@@ -1,13 +1,13 @@
 (ns thisonesforthegirls.lambda-fns
-  (:require [cljs.core.async :refer [<! merge]]
+  (:require [cljs.core.async :refer [chan >! <! close! merge]]
             [cljs.nodejs :as node]
             [com.stuartsierra.component :as component]
             [datascript.core :as d]
             [thisonesforthegirls.db :as db]
             [thisonesforthegirls.s3 :as s3]
-            [thisonesforthegirls.pages :as p]
-            [thisonesforthegirls.util :as u])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [thisonesforthegirls.pages :as p])
+  (:require-macros [cljs.core.async.macros :refer [go]])
+  (:import [goog.object]))
 
 
 (defrecord LambdaFns [db s3-conn html-bucket])
