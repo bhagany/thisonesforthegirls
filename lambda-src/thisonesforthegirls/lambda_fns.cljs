@@ -144,6 +144,6 @@
         ;; check token, return login form if bad
         (if (check-login-token @conn jwt)
           (case path
-            "" (p/admin-home pages)
+            "/admin" (p/admin-home pages)
             p/admin-error)
           (p/login-form pages))))))
