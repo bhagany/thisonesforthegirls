@@ -49,7 +49,7 @@
       (e/listen body e/EventType.SUBMIT cb))))
 
 (defonce get-page
-  (do (main admin-page-url)))
+  (main admin-page-url))
 
 (defonce submit-listner
   (form-submitter))
