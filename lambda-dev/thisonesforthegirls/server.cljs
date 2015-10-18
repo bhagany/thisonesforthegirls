@@ -25,9 +25,11 @@
                    "/admin-page" (l/admin-page lambda-fns)
                    "/login" (l/login lambda-fns))]
       (go
-        ;; TODO: catch errors, fail nicely
         (let [res-text (<! (res-fn event {}))]
-          (.end response res-text))))))
+          (if (instance? js/Error res-text)
+            ;; TODO: more intelligent error handling here
+            (.end response "come onnnnnn")
+            (.end response res-text)))))))
 
 (defn static-headers
   [response path]

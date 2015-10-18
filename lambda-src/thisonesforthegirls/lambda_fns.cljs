@@ -75,7 +75,7 @@
                            :user/name username
                            :user/password hashed}]))]
           (if err
-            (throw (js/Error. err))
+            (js/Error. err)
             "Credentials set"))))))
 
 (defn set-token-secret
@@ -90,7 +90,7 @@
                            :db/ident :secret
                            :secret secret}]))]
           (if err
-            (throw (js/Error. err))
+            (js/Error. err)
             "Secret set"))))))
 
 (defn generate-all-pages
@@ -100,14 +100,16 @@
       (go
         (let [put-ch (->> (p/all-page-info pages)
                           (map (page-info->ch lambda-fns html-bucket))
-                          merge)]
-          (loop []
-            (let [[err :as val] (<! put-ch)]
-              (when err
-                (throw (js/Error. err)))
-              (when-not (nil? val)
-                (recur))))
-          "success")))))
+                          merge)
+              error (loop []
+                      (let [[err :as val] (<! put-ch)]
+                        (when err
+                          (js/Error. err))
+                        (when-not (nil? val)
+                          (recur))))]
+          (if error
+            error
+            "success"))))))
 
 ;; Public functions (exposed through API Gateway)
 
@@ -130,9 +132,9 @@
                                    username)
                               "")]
           (cond
-            (some nil? [username password]) (throw (js/Error. "Creds missing"))
+            (some nil? [username password]) (js/Error. "Creds missing")
             (.compareSync bcrypt password stored-hash) (make-login-token @conn)
-            :else (throw (js/Error. "Wrong password"))))))))
+            :else (js/Error. "Wrong password")))))))
 
 (defn admin-page
   [lambda-fns]
