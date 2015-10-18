@@ -120,14 +120,15 @@
           bcrypt (node/require "bcryptjs")]
       (go
         (let [conn (<! (:conn-ch db))
-              stored-hash (d/q '[:find ?password .
-                                 :in $ ?username
-                                 :where
-                                 [?e :db/ident :admin]
-                                 [?e :user/name ?username]
-                                 [?e :user/password ?password]]
-                               @conn
-                               username)]
+              stored-hash (or (d/q '[:find ?password .
+                                     :in $ ?username
+                                     :where
+                                     [?e :db/ident :admin]
+                                     [?e :user/name ?username]
+                                     [?e :user/password ?password]]
+                                   @conn
+                                   username)
+                              "")]
           (cond
             (some nil? [username password]) (throw (js/Error. "Creds missing"))
             (.compareSync bcrypt password stored-hash) (make-login-token @conn)
