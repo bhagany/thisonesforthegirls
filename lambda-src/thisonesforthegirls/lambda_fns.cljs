@@ -116,8 +116,7 @@
 (defn login
   [lambda-fns]
   (fn [event context]
-    (let [{:keys [body]} event
-          {:keys [username password]} body
+    (let [{:keys [username password]} event
           {:keys [db]} lambda-fns
           bcrypt (node/require "bcryptjs")]
       (go
@@ -140,8 +139,7 @@
   [lambda-fns]
   (fn [event context]
     (go
-      (let [{:keys [body jwt]} event
-            {:keys [path]} body
+      (let [{:keys [path jwt]} event
             {:keys [pages db]} lambda-fns
             conn (<! (:conn-ch db))]
         ;; check token, return login form if bad
