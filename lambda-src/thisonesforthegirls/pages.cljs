@@ -325,6 +325,7 @@
   (let [{:keys [lambda-base]} pages]
     (html
      [:img.header {:src "/assets/login.gif" :alt "Login"}]
+     [:p#error]
      [:form {:action (str lambda-base "login") :method "post"}
       [:dl
        [:dt [:label {:for "username"} "Username"]]

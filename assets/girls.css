@@ -216,3 +216,8 @@ dd.address textarea {
 dd.blurb textarea {
   height: 150px;
 }
+
+#error {
+  display: none;
+  color: red;
+}
