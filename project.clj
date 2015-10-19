@@ -67,7 +67,7 @@
                                    :closure-defines {:thisonesforthegirls.admin.admin_page_url "/lambda-fns/admin-page"}
                                    :optimizations :advanced}}
                        {:id "browser-dev"
-                        :source-paths ["browser-src" #_"dev-browser"]
+                        :source-paths ["browser-src"]
                         :figwheel true
                         :compiler {:main thisonesforthegirls.admin
                                    :output-to "out/browser-dev/admin.js"
