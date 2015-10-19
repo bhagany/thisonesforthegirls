@@ -36,10 +36,13 @@
         (let [loc (.. js/window -location -href)
               path (.getPath (goog.Uri.parse loc))]
           (if (s/ends-with? action "login")
+            ;; login processing
             (let [text (.getResponseText xhr)]
               (cookies/set "jwt" text)
               (.reload (.-location js/window)))
+            ;; other form processing
             (.log js/console "other forms")))
+        ;; general error processing
         (let [resp-json (.getResponseJson xhr)
               error-p (.getElementById js/document "error")]
           (set! (.-innerHTML error-p) (.-errorMessage resp-json))
