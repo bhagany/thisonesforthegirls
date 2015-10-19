@@ -54,10 +54,12 @@
               (let [form (aget (dom/getElementsByTagNameAndClass "form") 0)
                     action (.getAttribute form "action")
                     form-data (f/getFormDataMap form)
+                    loc (.. js/window -location -href)
+                    path (.getPath (goog.Uri.parse loc))
                     xhr-json (->> (goog.object/get form-data "map_")
                                   js->clj
                                   (map (fn [[k v]] [k (v 0)]))
-                                  (into {})
+                                  (into {:path path})
                                   clj->js
                                   (.stringify js/JSON))]
                 (goog.net.XhrIo.send action
