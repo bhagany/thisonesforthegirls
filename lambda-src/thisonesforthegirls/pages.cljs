@@ -354,7 +354,7 @@
      [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
      [:p#error]
      [:h2#success]
-     [:form {:action (str lambda-base "/edit-page") :method "post"}
+     [:form {:action (str lambda-base "edit-page") :method "post"}
       [:dl
        [:dt [:label {:for "welcome"} "Welcome Message"]]
        [:dd [:textarea {:name "welcome" :rows "24" :cols "80"} welcome-text]]
@@ -370,7 +370,7 @@
      [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
      [:p#error]
      [:h2#success]
-     [:form {:action (str lambda-base "/edit-page") :method "post"}
+     [:form {:action (str lambda-base "edit-page") :method "post"}
       [:dl
        [:dt [:label {:for "about"} "Text"]]
        [:dd [:textarea {:name "about" :rows "24" :cols "80"} about-text]]
@@ -387,7 +387,7 @@
                    :alt "Community Resources"}]
      [:p#error]
      [:h2#success]
-     [:form {:action (str lambda-base "/edit-page") :method "post"}
+     [:form {:action (str lambda-base "edit-page") :method "post"}
       [:dl
        [:dt [:label {:for "resources"} "Text"]]
        [:dd [:textarea {:name "resources" :rows "24" :cols "80"} resources-text]]
