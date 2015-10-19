@@ -13,23 +13,31 @@
   [lambda-fns]
   (fn [request response next]
     (let [{:keys [pages]} lambda-fns
-          req-body (goog.object/get request "body")
+          req-body (.-body request)
           body (if (string? req-body)
                  (.parse js/JSON req-body)
                  req-body)
-          headers (goog.object/get request "headers")
+          headers (.-headers request)
           event {:jwt (goog.object/get headers "x-jwt")
-                 :method (goog.object/get request "method")
+                 :method (.-method request)
                  :body (js->clj body :keywordize-keys true)}
-          res-fn (case (goog.object/get request "url")
+          res-fn (case (.-url request)
                    "/admin-page" (l/admin-page lambda-fns)
                    "/login" (l/login lambda-fns))]
       (go
-        (let [res-text (<! (res-fn event {}))]
-          (if (instance? js/Error res-text)
+        (let [result (<! (res-fn event {}))]
+          (if (instance? js/Error result)
             ;; TODO: more intelligent error handling here
-            (.end response "come onnnnnn")
-            (.end response res-text)))))))
+            (do
+              (set! (.-statusCode response) 500)
+              (.end response
+                    (.stringify js/JSON
+                     ;; #js reader macro doesn't work inside go blocks
+                     ;; http://dev.clojure.org/jira/browse/ASYNC-117
+                     (clj->js {:errorMessage (.-message result)
+                               :errorType (.. result -constructor -name)
+                               :stackTrace (.-stack result)}))))
+            (.end response result)))))))
 
 (defn static-headers
   [response path]

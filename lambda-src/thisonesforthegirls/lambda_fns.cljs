@@ -134,7 +134,7 @@
           (cond
             (some nil? [username password]) (js/Error. "Creds missing")
             (.compareSync bcrypt password stored-hash) (make-login-token @conn)
-            :else (js/Error. "Wrong password")))))))
+            :else (js/Error. "Wrong username or password")))))))
 
 (defn admin-page
   [lambda-fns]
