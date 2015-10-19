@@ -390,7 +390,9 @@
      [:form {:action (str lambda-base "edit-page") :method "post"}
       [:dl
        [:dt [:label {:for "resources"} "Text"]]
-       [:dd [:textarea {:name "resources" :rows "24" :cols "80"} resources-text]]
+       [:dd [:textarea
+             {:name "resources" :rows "24" :cols "80"}
+             resources-text]]
        [:dt "&nbsp;"]
        [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
      admin-footer)))
