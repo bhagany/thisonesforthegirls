@@ -1,8 +1,10 @@
 (ns thisonesforthegirls.admin
-  (:require [goog.dom :as dom]
+  (:require [clojure.string :as s]
+            [goog.dom :as dom]
             [goog.dom.forms :as f]
             [goog.events :as e]
-            [goog.net.cookies])
+            [goog.net.cookies :as cookies]
+            [goog.style :as style])
   (:import [goog.net XhrIo]
            [goog Uri]))
 
@@ -14,7 +16,7 @@
   (let [loc (.. js/window -location -href)
         xhr-json (.stringify js/JSON
                              #js {:path (.getPath (goog.Uri.parse loc))})
-        jwt (.get goog.net.cookies "jwt")
+        jwt (cookies/get "jwt")
         headers (if jwt
                   #js {:x-jwt jwt}
                   #js {})]
@@ -27,9 +29,19 @@
 
 (defn handle-ajax-response
   [response]
-  (let [text (.getResponseText (.-target response))]
-    (.set goog.net.cookies "jwt" text)
-    (.reload (.-location js/window))))
+  (let [xhr (.-target response)]
+    (if (< (.getStatus xhr) 300)
+      (let [loc (.. js/window -location -href)
+            path (.getPath (goog.Uri.parse loc))]
+        (if (s/ends-with? path "login")
+          (let [text (.getResponseText xhr)]
+            (cookies/set "jwt" text)
+            (.reload (.-location js/window)))
+          (.log js/console "other forms")))
+      (let [resp-json (.getResponseJson xhr)
+            error-p (.getElementById js/document "error")]
+        (set! (.-innerHTML error-p) (.-errorMessage resp-json))
+        (style/setStyle error-p "display" "block")))))
 
 (defn form-submitter
   []
