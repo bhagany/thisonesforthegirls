@@ -56,6 +56,10 @@
                     form-data (f/getFormDataMap form)
                     loc (.. js/window -location -href)
                     path (.getPath (goog.Uri.parse loc))
+                    jwt (cookies/get "jwt")
+                    headers (if jwt
+                              #js {:x-jwt jwt}
+                              #js {})
                     xhr-json (->> (goog.object/get form-data "map_")
                                   js->clj
                                   (map (fn [[k v]] [k (v 0)]))
@@ -65,7 +69,8 @@
                 (goog.net.XhrIo.send action
                                      (handle-ajax-response action)
                                      "POST"
-                                     xhr-json)))]
+                                     xhr-json
+                                     headers)))]
       (e/listen body e/EventType.SUBMIT cb))))
 
 (defonce get-page
