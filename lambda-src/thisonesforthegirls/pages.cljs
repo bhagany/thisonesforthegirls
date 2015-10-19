@@ -335,7 +335,7 @@
        [:dt "&nbsp;"]
        [:dd [:input {:type "submit" :value "Login"}]]]])))
 
-(defn admin-home
+(defn admin
   [pages]
   (html
    [:h2 "Click on the links below to do stuff"]
@@ -345,5 +345,54 @@
     "Choose accordingly"]
    [:h4 "Administration Links"]
    admin-footer))
+
+(defn admin-home
+  [pages]
+  (let [{:keys [lambda-base db]} pages
+        welcome-text (d/q text-query db [:db/ident :home])]
+    (html
+     [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
+     [:p#error]
+     [:h2#success]
+     [:form {:action (str lambda-base "/edit-page") :method "post"}
+      [:dl
+       [:dt [:label {:for "welcome"} "Welcome Message"]]
+       [:dd [:textarea {:name "welcome" :rows "24" :cols "80"} welcome-text]]
+       [:dt "&nbsp;"]
+       [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+     admin-footer)))
+
+(defn admin-about
+  [pages]
+  (let [{:keys [lambda-base db]} pages
+        about-text (d/q text-query db [:db/ident :about-us])]
+    (html
+     [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
+     [:p#error]
+     [:h2#success]
+     [:form {:action (str lambda-base "/edit-page") :method "post"}
+      [:dl
+       [:dt [:label {:for "about"} "Text"]]
+       [:dd [:textarea {:name "about" :rows "24" :cols "80"} about-text]]
+       [:dt "&nbsp;"]
+       [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+     admin-footer)))
+
+(defn admin-resources
+  [pages]
+  (let [{:keys [lambda-base db]} pages
+        resources-text (d/q text-query db [:db/ident :resources])]
+    (html
+     [:img.header {:src "/assets/community-resources.gif"
+                   :alt "Community Resources"}]
+     [:p#error]
+     [:h2#success]
+     [:form {:action (str lambda-base "/edit-page") :method "post"}
+      [:dl
+       [:dt [:label {:for "resources"} "Text"]]
+       [:dd [:textarea {:name "resources" :rows "24" :cols "80"} resources-text]]
+       [:dt "&nbsp;"]
+       [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+     admin-footer)))
 
 (def admin-error (html error-fragment))

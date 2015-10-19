@@ -72,7 +72,7 @@
                         :compiler {:main thisonesforthegirls.admin
                                    :output-to "out/browser-dev/admin.js"
                                    :output-dir "out/browser-dev/admin"
-                                   :asset-path "assets/js/admin"
+                                   :asset-path "/assets/js/admin"
                                    :closure-defines {:thisonesforthegirls.admin.admin_page_url "/lambda-fns/admin-page"}
                                    :optimizations :none}}]}
   :figwheel {})

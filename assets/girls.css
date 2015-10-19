@@ -221,3 +221,7 @@ dd.blurb textarea {
   display: none;
   color: red;
 }
+
+#success {
+  display: none;
+}
