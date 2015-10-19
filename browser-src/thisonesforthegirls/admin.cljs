@@ -28,20 +28,22 @@
       (goog.net.XhrIo.send page-url cb "POST" xhr-json headers))))
 
 (defn handle-ajax-response
-  [response]
-  (let [xhr (.-target response)]
-    (if (< (.getStatus xhr) 300)
-      (let [loc (.. js/window -location -href)
-            path (.getPath (goog.Uri.parse loc))]
-        (if (s/ends-with? path "login")
-          (let [text (.getResponseText xhr)]
-            (cookies/set "jwt" text)
-            (.reload (.-location js/window)))
-          (.log js/console "other forms")))
-      (let [resp-json (.getResponseJson xhr)
-            error-p (.getElementById js/document "error")]
-        (set! (.-innerHTML error-p) (.-errorMessage resp-json))
-        (style/setStyle error-p "display" "block")))))
+  [action]
+  (fn
+    [response]
+    (let [xhr (.-target response)]
+      (if (< (.getStatus xhr) 300)
+        (let [loc (.. js/window -location -href)
+              path (.getPath (goog.Uri.parse loc))]
+          (if (s/ends-with? action "login")
+            (let [text (.getResponseText xhr)]
+              (cookies/set "jwt" text)
+              (.reload (.-location js/window)))
+            (.log js/console "other forms")))
+        (let [resp-json (.getResponseJson xhr)
+              error-p (.getElementById js/document "error")]
+          (set! (.-innerHTML error-p) (.-errorMessage resp-json))
+          (style/setStyle error-p "display" "block"))))))
 
 (defn form-submitter
   []
@@ -57,7 +59,10 @@
                                   (into {})
                                   clj->js
                                   (.stringify js/JSON))]
-                (goog.net.XhrIo.send action handle-ajax-response "POST" xhr-json)))]
+                (goog.net.XhrIo.send action
+                                     (handle-ajax-response action)
+                                     "POST"
+                                     xhr-json)))]
       (e/listen body e/EventType.SUBMIT cb))))
 
 (defonce get-page
