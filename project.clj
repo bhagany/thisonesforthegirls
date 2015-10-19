@@ -26,7 +26,7 @@
                        [source-map-support "0.3.2"]
                        [ws "0.8.0"]]}
 
-  :source-paths ["lambda-src" "lambda-dev" "browser-src" "browser-dev"]
+  :source-paths ["lambda-src" "lambda-dev" "browser-src"]
 
   :clean-targets ^{:protect false} ["out" "target"]
 
