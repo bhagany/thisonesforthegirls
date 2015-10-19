@@ -27,7 +27,6 @@
       (go
         (let [result (<! (res-fn event {}))]
           (if (instance? js/Error result)
-            ;; TODO: more intelligent error handling here
             (do
               (set! (.-statusCode response) 500)
               (.end response
