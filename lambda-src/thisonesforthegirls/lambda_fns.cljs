@@ -21,10 +21,10 @@
 ;; Helpers
 
 (defn page-info->ch
-  [lambda-fns bucket]
+  [lambda-fns]
   (fn [{:keys [s3-key body]}]
     (s3/put-obj!-ch (:s3-conn lambda-fns)
-                    bucket s3-key body
+                    (:html-bucket lambda-fns) s3-key body
                     {:ContentLength (count body)
                      :ContentType "text/html"})))
 
@@ -96,10 +96,10 @@
 (defn generate-all-pages
   [lambda-fns]
   (fn [event context]
-    (let [{:keys [db html-bucket pages]} lambda-fns]
+    (let [{:keys [db pages]} lambda-fns]
       (go
         (let [put-ch (->> (<! (p/all-page-info pages))
-                          (map (page-info->ch lambda-fns html-bucket))
+                          (map (page-info->ch lambda-fns))
                           merge)
               error (loop []
                       (let [[err :as val] (<! put-ch)]
