@@ -365,62 +365,37 @@
    [:h4 "Administration Links"]
    admin-footer))
 
-(defn admin-home
-  [pages]
-  (go
-    (let [{:keys [lambda-base db]} pages
-          conn (<! (:conn-ch db))
-          welcome-text (d/q text-query @conn [:db/ident :home])]
-      (html
-       [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
-       [:p#error]
-       [:h2#success]
-       [:form {:action (str lambda-base "edit-page") :method "post"}
-        [:dl
-         [:dt [:label {:for "text"} "Welcome Message"]]
-         [:dd [:textarea {:name "text" :rows "24" :cols "80"} welcome-text]]
-         [:dt "&nbsp;"]
-         [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
-       admin-footer))))
+(defn admin-basic
+  [ident header-img text-label]
+  (fn [pages]
+    (go
+      (let [{:keys [lambda-base db]} pages
+            conn (<! (:conn-ch db))
+            text (d/q text-query @conn [:db/ident ident])]
+        (html
+         [:img.header header-img]
+         [:p#error]
+         [:h2#success]
+         [:form {:action (str lambda-base "edit-page") :method "post"}
+          [:dl
+           [:dt [:label {:for "text"} text-label]]
+           [:dd [:textarea {:name "text" :rows "24" :cols "80"} text]]
+           [:dt "&nbsp;"]
+           [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+         admin-footer)))))
 
-(defn admin-about-us
-  [pages]
-  (go
-    (let [{:keys [lambda-base db]} pages
-          conn (<! (:conn-ch db))
-          about-text (d/q text-query @conn [:db/ident :about-us])]
-      (html
-       [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
-       [:p#error]
-       [:h2#success]
-       [:form {:action (str lambda-base "edit-page") :method "post"}
-        [:dl
-         [:dt [:label {:for "text"} "Text"]]
-         [:dd [:textarea {:name "text" :rows "24" :cols "80"} about-text]]
-         [:dt "&nbsp;"]
-         [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
-       admin-footer))))
+(def admin-home (admin-basic :home
+                             {:src "/assets/welcome.gif" :alt "Welcome"}
+                             "Welcome Message"))
 
-(defn admin-resources
-  [pages]
-  (go
-    (let [{:keys [lambda-base db]} pages
-          conn (<! (:conn-ch db))
-          resources-text (d/q text-query @conn [:db/ident :resources])]
-      (html
-       [:img.header {:src "/assets/community-resources.gif"
-                     :alt "Community Resources"}]
-       [:p#error]
-       [:h2#success]
-       [:form {:action (str lambda-base "edit-page") :method "post"}
-        [:dl
-         [:dt [:label {:for "text"} "Text"]]
-         [:dd [:textarea
-               {:name "text" :rows "24" :cols "80"}
-               resources-text]]
-         [:dt "&nbsp;"]
-         [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
-       admin-footer))))
+(def admin-about-us (admin-basic :about-us
+                                 {:src "/assets/about-us.gif" :alt "About Us"}
+                                 "About Us Text"))
+
+(def admin-resources (admin-basic :resources
+                                  {:src "/assets/community-resources.gif"
+                                   :alt "Community Resources"}
+                                  "Community Resources Text"))
 
 (def admin-error (html error-fragment))
 
