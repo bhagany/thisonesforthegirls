@@ -151,3 +151,18 @@
             "/admin/community-resources" (<! (p/admin-resources pages))
             p/admin-error)
           (p/login-form pages))))))
+
+(defn edit-page
+  [lambda-fns]
+  (fn [event context]
+    (go
+      (let [{:keys [path jwt]} event
+            {:keys [pages db]} lambda-fns
+            conn (<! (:conn-ch db))]
+        (if (check-login-token @conn jwt)
+          (let [edit-fn (case path
+                          "/admin/welcome" p/edit-welcome
+                          "/admin/about" p/edit-about
+                          "/admin/community-resources" p/edit-resources)]
+            (<! (edit-fn pages event)))
+          (js/Error "Please log in"))))))

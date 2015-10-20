@@ -423,3 +423,26 @@
        admin-footer))))
 
 (def admin-error (html error-fragment))
+
+;; Editing functions
+
+(defn edit-basic
+  [ident]
+  (fn [pages event]
+    (go
+      (let [{:keys [db]} pages
+            {:keys [text]} event
+            [err] (<! (db/transact!-ch
+                       db
+                       [{:db/id -1
+                         :db/ident ident
+                         :page/text text}]))]
+        (if err
+          (js/Error. err)
+          "The text was successfully edited")))))
+
+(def edit-welcome (edit-basic :home))
+
+(def edit-about (edit-basic :about-us))
+
+(def edit-resources (edit-basic :resources))

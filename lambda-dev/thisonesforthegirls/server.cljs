@@ -23,6 +23,7 @@
                        (js->clj body :keywordize-keys true))
           res-fn (case (.-url request)
                    "/admin-page" (l/admin-page lambda-fns)
+                   "/edit-page" (l/edit-page lambda-fns)
                    "/login" (l/login lambda-fns))]
       (go
         (let [result (<! (res-fn event {}))]

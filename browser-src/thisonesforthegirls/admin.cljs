@@ -33,13 +33,16 @@
     [response]
     (let [xhr (.-target response)]
       (if (< (.getStatus xhr) 300)
-        (if (s/ends-with? action "login")
-          ;; login processing
-          (let [text (.getResponseText xhr)]
-            (cookies/set "jwt" text)
-            (.reload (.-location js/window)))
-          ;; other form processing
-          (.log js/console "other forms"))
+        (let [text (.getResponseText xhr)]
+          (if (s/ends-with? action "login")
+            ;; login processing
+            (do
+              (cookies/set "jwt" text)
+              (.reload (.-location js/window)))
+            ;; other form processing
+            (let [success (.getElementById js/document "success")]
+              (set! (.-innerHTML success) text)
+              (style/setStyle success "display" "block"))))
         ;; general error processing
         (let [resp-json (.getResponseJson xhr)
               error-p (.getElementById js/document "error")]
