@@ -147,7 +147,7 @@
           (case path
             "/admin" (p/admin pages)
             "/admin/welcome" (<! (p/admin-home pages))
-            "/admin/about" (<! (p/admin-about pages))
+            "/admin/about" (<! (p/admin-about-us pages))
             "/admin/community-resources" (<! (p/admin-resources pages))
             p/admin-error)
           (p/login-form pages))))))
@@ -160,9 +160,20 @@
             {:keys [pages db]} lambda-fns
             conn (<! (:conn-ch db))]
         (if (check-login-token @conn jwt)
-          (let [edit-fn (case path
-                          "/admin/welcome" p/edit-home
-                          "/admin/about" p/edit-about
-                          "/admin/community-resources" p/edit-resources)]
-            (<! (edit-fn pages event)))
+          (let [[edit-fn gen-fn s3-key]
+                (case path
+                  "/admin/welcome" [p/edit-home p/home "home"]
+                  "/admin/about" [p/edit-about-us p/about-us "about"]
+                  "/admin/community-resources" [p/edit-resources
+                                                p/resources
+                                                "resources"])
+                edit-result (<! (edit-fn pages event))]
+            (if (instance? js/Error edit-result)
+              edit-result
+              (let [body (<! (gen-fn pages))
+                    [put-err] (<! ((page-info->ch lambda-fns)
+                                   {:s3-key s3-key :body body}))]
+                (if put-err
+                  put-err
+                  edit-result))))
           (js/Error "Please log in"))))))

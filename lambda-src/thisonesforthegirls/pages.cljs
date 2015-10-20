@@ -383,7 +383,7 @@
          [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
        admin-footer))))
 
-(defn admin-about
+(defn admin-about-us
   [pages]
   (go
     (let [{:keys [lambda-base db]} pages
@@ -443,6 +443,6 @@
 
 (def edit-home (edit-basic :home))
 
-(def edit-about (edit-basic :about-us))
+(def edit-about-us (edit-basic :about-us))
 
 (def edit-resources (edit-basic :resources))
