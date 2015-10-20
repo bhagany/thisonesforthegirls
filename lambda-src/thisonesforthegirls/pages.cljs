@@ -441,7 +441,7 @@
           (js/Error. err)
           "The text was successfully edited")))))
 
-(def edit-welcome (edit-basic :home))
+(def edit-home (edit-basic :home))
 
 (def edit-about (edit-basic :about-us))
 

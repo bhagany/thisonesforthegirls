@@ -161,7 +161,7 @@
             conn (<! (:conn-ch db))]
         (if (check-login-token @conn jwt)
           (let [edit-fn (case path
-                          "/admin/welcome" p/edit-welcome
+                          "/admin/welcome" p/edit-home
                           "/admin/about" p/edit-about
                           "/admin/community-resources" p/edit-resources)]
             (<! (edit-fn pages event)))
