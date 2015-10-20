@@ -158,7 +158,7 @@
                             :value "Submit"}]]]]]]))
 
 (def error-fragment
-  [:div#error
+  [:div.error
    [:h1 "Error"]
    [:p "We couldn't find what you were looking for"]
    [:p [:a {:href "/"} "Go back to the home page"]]])
