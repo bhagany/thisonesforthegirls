@@ -1,9 +1,12 @@
 (ns thisonesforthegirls.pages
-  (:require [com.stuartsierra.component :as component]
+  (:require [cljs.core.async :refer [<!]]
+            [com.stuartsierra.component :as component]
             [datascript.core :as d]
-            [hiccups.runtime])
+            [hiccups.runtime]
+            [thisonesforthegirls.db :as db])
   (:import [goog.date Date])
-  (:require-macros [hiccups.core :as hiccups :refer [html]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [hiccups.core :as hiccups :refer [html]]))
 
 ;; Templates and helpers
 
@@ -193,132 +196,148 @@
 
 (defn home
   [pages]
-  (let [{:keys [db]} pages
-        text (d/q text-query db [:db/ident :home])]
-    (site-template
-     "Welcome"
-     [[:div#welcome [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
-       [:p text]
-       [:img#youare {:src "/assets/you-are.gif"
-                     :alt "You are loved..."}]]])))
+  (go
+    (let [{:keys [db]} pages
+          conn (<! (:conn-ch db))
+          text (d/q text-query @conn [:db/ident :home])]
+      (site-template
+       "Welcome"
+       [[:div#welcome [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
+         [:p text]
+         [:img#youare {:src "/assets/you-are.gif"
+                       :alt "You are loved..."}]]]))))
 
 (defn about-us
   [pages]
-  (let [{:keys [db]} pages
-        text (d/q text-query db [:db/ident :about-us])]
-    (site-template
-     "About Us"
-     [[:div#about
-       [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
-       [:p text]]])))
+  (go
+    (let [{:keys [db]} pages
+          conn (<! (:conn-ch db))
+          text (d/q text-query @conn [:db/ident :about-us])]
+      (site-template
+       "About Us"
+       [[:div#about
+         [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
+         [:p text]]]))))
 
 (defn resources
   [pages]
-  (let [{:keys [db]} pages
-        text (d/q text-query db [:db/ident :resources])]
-    (site-template
-     "Community Resources"
-     [[:div#resources
-       [:img.header {:src "/assets/community-resources.gif"
-                     :alt "Community Resources"}]
-       [:p text]]])))
+  (go
+    (let [{:keys [db]} pages
+          conn (<! (:conn-ch db))
+          text (d/q text-query @conn [:db/ident :resources])]
+      (site-template
+       "Community Resources"
+       [[:div#resources
+         [:img.header {:src "/assets/community-resources.gif"
+                       :alt "Community Resources"}]
+         [:p text]]]))))
 
 (defn featured-devotion
   [pages]
-  (let [{:keys [db]} pages
-        devotion (d/q '[:find (pull ?e [*]) .
-                        :where [?e :devotion/featured? true]] db)]
-    (site-template
-     "Devotions"
-     [[:div#devotions
-       [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
-       (into [:dl] (devotion-markup devotion))
-       [:p [:a {:href "/devotions/archive"} "Read more"]]]])))
+  (go
+    (let [{:keys [db]} pages
+          conn (<! (:conn-ch db))
+          devotion (d/q '[:find (pull ?e [*]) .
+                          :where [?e :devotion/featured? true]] @conn)]
+      (site-template
+       "Devotions"
+       [[:div#devotions
+         [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
+         (into [:dl] (devotion-markup devotion))
+         [:p [:a {:href "/devotions/archive"} "Read more"]]]]))))
 
 (defn archived-devotions
   [pages]
-  (let [{:keys [db]} pages
-        devotions (->> (d/q '[:find [(pull ?e [*]) ...]
-                              :where [?e :devotion/featured? false]] db)
-                       (sort-by :devotion/created-at #(compare %2 %1)))]
-    (site-template
-     "Devotions Archive"
-     [[:div#devotions
-       [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
-       [:a {:href "/devotions"} "Back to Featured Devotion"]
-                     [:h3 "Archive"]
-                     [:ul (map devotion-list-item devotions)]
-                     [:dl (mapcat devotion-markup devotions)]
-                     [:a {:href "/devotions"} "Back to Featured Devotion"]]])))
+  (go
+    (let [{:keys [db]} pages
+          conn (<! (:conn-ch db))
+          devotions (->> (d/q '[:find [(pull ?e [*]) ...]
+                                :where [?e :devotion/featured? false]] @conn)
+                         (sort-by :devotion/created-at #(compare %2 %1)))]
+      (site-template
+       "Devotions Archive"
+       [[:div#devotions
+         [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
+         [:a {:href "/devotions"} "Back to Featured Devotion"]
+         [:h3 "Archive"]
+         [:ul (map devotion-list-item devotions)]
+         [:dl (mapcat devotion-markup devotions)]
+         [:a {:href "/devotions"} "Back to Featured Devotion"]]]))))
 
 (defn scripture-categories
   [pages]
-  (let [{:keys [db]} pages
-        categories (->> (d/q '[:find [(pull ?e [*]) ...]
-                               :where [?e :scripture-category/name]] db)
-                        (sort-by :scripture-category/name))]
-    (site-template
-     "Scripture"
-     [[:div#scripture
-       [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
-       [:ul (map scripture-category-list-item categories)]]])))
+  (go
+    (let [{:keys [db]} pages
+          conn (<! (:conn-ch db))
+          categories (->> (d/q '[:find [(pull ?e [*]) ...]
+                                 :where [?e :scripture-category/name]] @conn)
+                          (sort-by :scripture-category/name))]
+      (site-template
+       "Scripture"
+       [[:div#scripture
+         [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
+         [:ul (map scripture-category-list-item categories)]]]))))
 
 (defn testimonies
   [pages]
-  (let [{:keys [db]} pages
-        testimonies (->> (d/q '[:find [(pull ?e [*]) ...]
-                                :where [?e :testimony/title]] db)
-                         (sort-by :testimony/title))]
-    (site-template
-     "Testimonies"
-     [[:div#testimonies
-       [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]
-       [:ul (map testimony-list-item testimonies)]]])))
+  (go
+    (let [{:keys [db]} pages
+          conn (<! (:conn-ch db))
+          testimonies (->> (d/q '[:find [(pull ?e [*]) ...]
+                                  :where [?e :testimony/title]] @conn)
+                           (sort-by :testimony/title))]
+      (site-template
+       "Testimonies"
+       [[:div#testimonies
+         [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]
+         [:ul (map testimony-list-item testimonies)]]]))))
 
 (defn all-page-info
   [pages]
-  (let [{:keys [db]} pages
-        defined [{:s3-key "home"
-                  :body (home pages)}
-                 {:s3-key "about"
-                  :body (about-us pages)}
-                 {:s3-key "community-resources"
-                  :body (resources pages)}
-                 {:s3-key "devotions"
-                  :body (featured-devotion pages)}
-                 {:s3-key "devotions/archive"
-                  :body (archived-devotions pages)}
-                 {:s3-key "scripture"
-                  :body (scripture-categories pages)}
-                 {:s3-key "testimonies"
-                  :body (testimonies pages)}
-                 {:s3-key "contact"
-                  :body contact-us}
-                 {:s3-key "error"
-                  :body error}
-                 {:s3-key "admin"
-                  :body (admin-template "Admin")}
-                 {:s3-key "admin/welcome"
-                  :body (admin-template "Welcome Admin")}
-                 {:s3-key "admin/about"
-                  :body (admin-template "About Us Admin")}
-                 {:s3-key "admin/community-resources"
-                  :body (admin-template "Community Resources Admin")}
-                 {:s3-key "admin/devotions"
-                  :body (admin-template "Devotions Admin")}
-                 {:s3-key "admin/scripture"
-                  :body (admin-template "Scripture Admin")}
-                 {:s3-key "admin/testimonies"
-                  :body (admin-template "Testimonies Admin")}]
-        s-cats (->> (d/q '[:find [(pull ?e [* {:scripture/_category [*]}]) ...]
-                           :where [?e :scripture-category/name]] db)
-                    (map scripture-category))
-        tmonies (->> (d/q '[:find [(pull ?e [*]) ...]
-                            :where [?e :testimony/title]] db)
-                     (map testimony))]
-    (-> defined
-        (into s-cats)
-        (into tmonies))))
+  (go
+    (let [{:keys [db]} pages
+          conn (<! (:conn-ch db))
+          defined [{:s3-key "home"
+                    :body (<! (home pages))}
+                   {:s3-key "about"
+                    :body (<! (about-us pages))}
+                   {:s3-key "community-resources"
+                    :body (<! (resources pages))}
+                   {:s3-key "devotions"
+                    :body (<! (featured-devotion pages))}
+                   {:s3-key "devotions/archive"
+                    :body (<! (archived-devotions pages))}
+                   {:s3-key "scripture"
+                    :body (<! (scripture-categories pages))}
+                   {:s3-key "testimonies"
+                    :body (<! (testimonies pages))}
+                   {:s3-key "contact"
+                    :body contact-us}
+                   {:s3-key "error"
+                    :body error}
+                   {:s3-key "admin"
+                    :body (admin-template "Admin")}
+                   {:s3-key "admin/welcome"
+                    :body (admin-template "Welcome Admin")}
+                   {:s3-key "admin/about"
+                    :body (admin-template "About Us Admin")}
+                   {:s3-key "admin/community-resources"
+                    :body (admin-template "Community Resources Admin")}
+                   {:s3-key "admin/devotions"
+                    :body (admin-template "Devotions Admin")}
+                   {:s3-key "admin/scripture"
+                    :body (admin-template "Scripture Admin")}
+                   {:s3-key "admin/testimonies"
+                    :body (admin-template "Testimonies Admin")}]
+          s-cats (->> (d/q '[:find [(pull ?e [* {:scripture/_category [*]}]) ...]
+                             :where [?e :scripture-category/name]] @conn)
+                      (map scripture-category))
+          tmonies (->> (d/q '[:find [(pull ?e [*]) ...]
+                              :where [?e :testimony/title]] @conn)
+                       (map testimony))]
+      (-> defined
+          (into s-cats)
+          (into tmonies)))))
 
 (defn login-form
   [pages]
@@ -348,53 +367,59 @@
 
 (defn admin-home
   [pages]
-  (let [{:keys [lambda-base db]} pages
-        welcome-text (d/q text-query db [:db/ident :home])]
-    (html
-     [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
-     [:p#error]
-     [:h2#success]
-     [:form {:action (str lambda-base "edit-page") :method "post"}
-      [:dl
-       [:dt [:label {:for "welcome"} "Welcome Message"]]
-       [:dd [:textarea {:name "welcome" :rows "24" :cols "80"} welcome-text]]
-       [:dt "&nbsp;"]
-       [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
-     admin-footer)))
+  (go
+    (let [{:keys [lambda-base db]} pages
+          conn (<! (:conn-ch db))
+          welcome-text (d/q text-query @conn [:db/ident :home])]
+      (html
+       [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
+       [:p#error]
+       [:h2#success]
+       [:form {:action (str lambda-base "edit-page") :method "post"}
+        [:dl
+         [:dt [:label {:for "text"} "Welcome Message"]]
+         [:dd [:textarea {:name "text" :rows "24" :cols "80"} welcome-text]]
+         [:dt "&nbsp;"]
+         [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+       admin-footer))))
 
 (defn admin-about
   [pages]
-  (let [{:keys [lambda-base db]} pages
-        about-text (d/q text-query db [:db/ident :about-us])]
-    (html
-     [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
-     [:p#error]
-     [:h2#success]
-     [:form {:action (str lambda-base "edit-page") :method "post"}
-      [:dl
-       [:dt [:label {:for "about"} "Text"]]
-       [:dd [:textarea {:name "about" :rows "24" :cols "80"} about-text]]
-       [:dt "&nbsp;"]
-       [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
-     admin-footer)))
+  (go
+    (let [{:keys [lambda-base db]} pages
+          conn (<! (:conn-ch db))
+          about-text (d/q text-query @conn [:db/ident :about-us])]
+      (html
+       [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
+       [:p#error]
+       [:h2#success]
+       [:form {:action (str lambda-base "edit-page") :method "post"}
+        [:dl
+         [:dt [:label {:for "text"} "Text"]]
+         [:dd [:textarea {:name "text" :rows "24" :cols "80"} about-text]]
+         [:dt "&nbsp;"]
+         [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+       admin-footer))))
 
 (defn admin-resources
   [pages]
-  (let [{:keys [lambda-base db]} pages
-        resources-text (d/q text-query db [:db/ident :resources])]
-    (html
-     [:img.header {:src "/assets/community-resources.gif"
-                   :alt "Community Resources"}]
-     [:p#error]
-     [:h2#success]
-     [:form {:action (str lambda-base "edit-page") :method "post"}
-      [:dl
-       [:dt [:label {:for "resources"} "Text"]]
-       [:dd [:textarea
-             {:name "resources" :rows "24" :cols "80"}
-             resources-text]]
-       [:dt "&nbsp;"]
-       [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
-     admin-footer)))
+  (go
+    (let [{:keys [lambda-base db]} pages
+          conn (<! (:conn-ch db))
+          resources-text (d/q text-query @conn [:db/ident :resources])]
+      (html
+       [:img.header {:src "/assets/community-resources.gif"
+                     :alt "Community Resources"}]
+       [:p#error]
+       [:h2#success]
+       [:form {:action (str lambda-base "edit-page") :method "post"}
+        [:dl
+         [:dt [:label {:for "text"} "Text"]]
+         [:dd [:textarea
+               {:name "text" :rows "24" :cols "80"}
+               resources-text]]
+         [:dt "&nbsp;"]
+         [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+       admin-footer))))
 
 (def admin-error (html error-fragment))

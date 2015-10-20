@@ -98,7 +98,7 @@
   (fn [event context]
     (let [{:keys [db html-bucket pages]} lambda-fns]
       (go
-        (let [put-ch (->> (p/all-page-info pages)
+        (let [put-ch (->> (<! (p/all-page-info pages))
                           (map (page-info->ch lambda-fns html-bucket))
                           merge)
               error (loop []
@@ -146,8 +146,8 @@
         (if (check-login-token @conn jwt)
           (case path
             "/admin" (p/admin pages)
-            "/admin/welcome" (p/admin-home pages)
-            "/admin/about" (p/admin-about pages)
-            "/admin/community-resources" (p/admin-resources pages)
+            "/admin/welcome" (<! (p/admin-home pages))
+            "/admin/about" (<! (p/admin-about pages))
+            "/admin/community-resources" (<! (p/admin-resources pages))
             p/admin-error)
           (p/login-form pages))))))
