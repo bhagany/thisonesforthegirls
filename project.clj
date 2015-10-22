@@ -8,6 +8,7 @@
                                                           com.cognitect/transit-cljs]]
                  [hiccups "0.3.0"]
                  [io.nervous/cljs-lambda "0.1.2"]
+                 [markdown-clj "0.9.75"]
                  [org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.145"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]]

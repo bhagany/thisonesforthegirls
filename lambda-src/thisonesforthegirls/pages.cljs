@@ -1,8 +1,10 @@
 (ns thisonesforthegirls.pages
   (:require [cljs.core.async :refer [<!]]
+            [clojure.string :as s]
             [com.stuartsierra.component :as component]
             [datascript.core :as d]
             [hiccups.runtime]
+            [markdown.core :refer [md->html]]
             [thisonesforthegirls.db :as db])
   (:import [goog.date Date])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -199,38 +201,44 @@
   (go
     (let [{:keys [db]} pages
           conn (<! (:conn-ch db))
-          text (d/q text-query @conn [:db/ident :home])]
-      (site-template
-       "Welcome"
-       [[:div#welcome [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
-         [:p text]
-         [:img#youare {:src "/assets/you-are.gif"
-                       :alt "You are loved..."}]]]))))
+          text (md->html (or (d/q text-query @conn [:db/ident :home])
+                             ""))
+          page (site-template
+                "Welcome"
+                [[:div#welcome [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
+                  "this text will not occur"
+                  [:img#youare {:src "/assets/you-are.gif"
+                                :alt "You are loved..."}]]])]
+      (s/replace page "this text will not occur" text))))
 
 (defn about-us
   [pages]
   (go
     (let [{:keys [db]} pages
           conn (<! (:conn-ch db))
-          text (d/q text-query @conn [:db/ident :about-us])]
-      (site-template
-       "About Us"
-       [[:div#about
-         [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
-         [:p text]]]))))
+          text (md->html (or (d/q text-query @conn [:db/ident :about-us])
+                             ""))
+          page (site-template
+                "About Us"
+                [[:div#about
+                  [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
+                  "this text will not occur"]])]
+      (s/replace page "this text will not occur" text))))
 
 (defn resources
   [pages]
   (go
     (let [{:keys [db]} pages
           conn (<! (:conn-ch db))
-          text (d/q text-query @conn [:db/ident :resources])]
-      (site-template
-       "Community Resources"
-       [[:div#resources
-         [:img.header {:src "/assets/community-resources.gif"
-                       :alt "Community Resources"}]
-         [:p text]]]))))
+          text (md->html (or (d/q text-query @conn [:db/ident :resources])
+                             ""))
+          page (site-template
+                "Community Resources"
+                [[:div#resources
+                  [:img.header {:src "/assets/community-resources.gif"
+                                :alt "Community Resources"}]
+                  "this text will not occur"]])]
+      (s/replace page "this text will not occur" text))))
 
 (defn featured-devotion
   [pages]
