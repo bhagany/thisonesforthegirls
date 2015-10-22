@@ -83,8 +83,6 @@
      (str "try { _gat._getTracker(\"UA-8266354-4\");"
           "pageTracker._trackPageview(); } catch(err) {}")]]))
 
-(def text-query '[:find ?text . :in $ ?e :where [?e :page/text ?text]])
-
 (defn devotion-markup
   [dev]
   [[:dt
@@ -170,24 +168,6 @@
    "Error"
    [error-fragment]))
 
-;; Admin page fragments
-
-(def admin-footer
-  [:ul.adminFooter
-   [:li [:a {:href "/admin"} "Admin Home "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/welcome"} " Welcome "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/about"} " About Us "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/devotions"} " Devotions "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/scripture"} " Scripture "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/testimonies"} " Testimonies "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/community-resources"}
-                         " Community Resources "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/contact"} " Contact Us "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/logout"} " Log out "]]])
-
-;; TODO: I need to know the url for lambda functions here
-;; Possibly should make pages a component
-
 (defrecord PageConfig [lambda-base db])
 
 (defn pages
@@ -195,6 +175,8 @@
   (component/using
    (map->PageConfig {:lambda-base lambda-base})
    [:db]))
+
+(def text-query '[:find ?text . :in $ ?e :where [?e :page/text ?text]])
 
 (defn home
   [pages]
@@ -361,6 +343,21 @@
        [:dd [:input {:type "password" :name "password"}]]
        [:dt "&nbsp;"]
        [:dd [:input {:type "submit" :value "Login"}]]]])))
+
+;; Admin page fragments
+
+(def admin-footer
+  [:ul.adminFooter
+   [:li [:a {:href "/admin"} "Admin Home "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/welcome"} " Welcome "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/about"} " About Us "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/devotions"} " Devotions "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/scripture"} " Scripture "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/testimonies"} " Testimonies "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/community-resources"}
+                         " Community Resources "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/contact"} " Contact Us "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/logout"} " Log out "]]])
 
 (defn admin
   [pages]
