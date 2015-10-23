@@ -387,6 +387,7 @@
            [:dd [:textarea {:name "text" :rows "24" :cols "80"} text]]
            [:dt "&nbsp;"]
            [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+         [:h4 "Administration Links"]
          admin-footer)))))
 
 (def admin-home (admin-basic :home
