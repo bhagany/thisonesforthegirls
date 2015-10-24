@@ -1,6 +1,7 @@
 (ns thisonesforthegirls.lambda-fns
   (:require [cljs.core.async :refer [chan >! <! close! merge]]
             [cljs.nodejs :as node]
+            [clojure.string :as s]
             [com.stuartsierra.component :as component]
             [datascript.core :as d]
             [thisonesforthegirls.db :as db]
@@ -126,6 +127,19 @@
             (.compareSync bcrypt password stored-hash) (make-login-token @conn)
             :else (js/Error. "Wrong username or password")))))))
 
+(defn admin-page-router
+  [pages path]
+  (go
+    (cond
+      (= path "/admin") (p/admin pages)
+      (= path "/admin/welcome") (<! (p/admin-home pages))
+      (= path "/admin/about") (<! (p/admin-about-us pages))
+      (= path "/admin/community-resources") (<! (p/admin-resources pages))
+      (= path "/admin/devotions") (<! (p/admin-devotions pages))
+      (= path "/admin/devotions/add") (p/admin-devotions-add pages)
+      (s/starts-with? path "/admin/devotions/edit/") (<! (p/admin-devotions-edit pages path))
+      :else p/admin-error)))
+
 (defn admin-page
   [lambda-fns]
   (fn [event context]
@@ -135,14 +149,7 @@
             conn (<! (:conn-ch db))]
         ;; check token, return login form if bad
         (if (check-login-token @conn jwt)
-          (case path
-            "/admin" (p/admin pages)
-            "/admin/welcome" (<! (p/admin-home pages))
-            "/admin/about" (<! (p/admin-about-us pages))
-            "/admin/community-resources" (<! (p/admin-resources pages))
-            "/admin/devotions" (<! (p/admin-devotions pages))
-            "/admin/devotions/add" (p/admin-devotions-add pages)
-            p/admin-error)
+          (<! (admin-page-router pages path))
           (p/login-form pages))))))
 
 (defn edit-page

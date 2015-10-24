@@ -428,7 +428,8 @@
 (defn admin-devotion-li
   [devotion]
   (let [title (gs/htmlEscape (:devotion/title devotion))]
-    [:li [:a {:href (str "/edit/" (:devotion/slug devotion))} title]]))
+    [:li [:a {:href (str "/admin/devotions/edit/" (:devotion/slug devotion))}
+          title]]))
 
 (defn admin-devotions
   [pages]
@@ -473,6 +474,18 @@
 (defn admin-devotions-add
   [pages]
   (admin-devotions-template pages))
+
+(defn admin-devotions-edit
+  [pages path]
+  (go
+    (let [slug (s/replace path "/admin/devotions/edit/" "")
+          {:keys [db]} pages
+          conn (<! (:conn-ch db))
+          devotion (d/q '[:find (pull ?dev-id [*]) .
+                          :in $ ?dev-id]
+                        @conn
+                        [:devotion/slug slug])]
+      (admin-devotions-template pages devotion))))
 
 (def admin-error (html error-fragment))
 
@@ -532,6 +545,13 @@
 
 (def edit-resources (edit-basic :resources resources))
 
+(defn dynamic-admin-page
+  [title path]
+  (fn [_]
+    (go
+      {:path path
+       :content (admin-template title)})))
+
 (defn add-devotion
   [pages event]
   (go
@@ -543,12 +563,13 @@
                                   @conn)
           tx (mapv (fn [d-id] {:db/id d-id :devotion/featured? false})
                    featured-devotions)
+          slug (str/slugify title)
           [err] (<! (db/transact!-ch
                      db
                      (into tx [{:db/id -1
                                 :devotion/author author
                                 :devotion/title title
-                                :devotion/slug (str/slugify title)
+                                :devotion/slug slug
                                 :devotion/body devotion
                                 :devotion/created-at (js/Date.)
                                 :devotion/featured? true}])))]
@@ -557,5 +578,8 @@
         (<! (generate-pages
              pages
              [featured-devotion
-              archived-devotions]
+              archived-devotions
+              (dynamic-admin-page
+               (str "Devotions Admin | Edit \"" title "\"")
+               (str "admin/devotions/edit/" slug))]
              "The devotion was successfully added"))))))
