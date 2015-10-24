@@ -1,6 +1,7 @@
 (ns thisonesforthegirls.pages
   (:require [cljs.core.async :as async :refer [<!]]
             [clojure.string :as s]
+            [cuerdas.core :as str]
             [com.stuartsierra.component :as component]
             [datascript.core :as d]
             [goog.string :as gs]
@@ -91,7 +92,7 @@
   (let [title (gs/htmlEscape (:devotion/title dev))
         author (gs/htmlEscape (:devotion/author dev))
         body (gs/htmlEscape (:devotion/body dev))]
-    [[:dt {:id (:db/id dev)}
+    [[:dt {:id (:devotion/slug dev)}
       [:span.dTitle title]
       [:span.dAuthor (str "by " author)]]
      [:dd (md->html body)]]))
@@ -99,7 +100,7 @@
 (defn devotion-list-item
   [dev]
   (let [title (gs/htmlEscape (:devotion/title dev))]
-    [:li [:a {:href (str "#" (:db/id dev))} title]]))
+    [:li [:a {:href (str "#" (:devotion/slug dev))} title]]))
 
 (defn scripture-category-list-item
   [category]
@@ -427,7 +428,7 @@
 (defn admin-devotion-li
   [devotion]
   (let [title (gs/htmlEscape (:devotion/title devotion))]
-    [:li [:a {:href (str "/edit/" (:db/id devotion))} title]]))
+    [:li [:a {:href (str "/edit/" (:devotion/slug devotion))} title]]))
 
 (defn admin-devotions
   [pages]
@@ -547,6 +548,7 @@
                      (into tx [{:db/id -1
                                 :devotion/author author
                                 :devotion/title title
+                                :devotion/slug (str/slugify title)
                                 :devotion/body devotion
                                 :devotion/created-at (js/Date.)
                                 :devotion/featured? true}])))]

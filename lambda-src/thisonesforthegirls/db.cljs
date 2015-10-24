@@ -26,6 +26,7 @@
 
    :devotion/author {}
    :devotion/title {}
+   :devotion/slug {}
    :devotion/body {}
    :devotion/created-at {}
    :devotion/featured? {}

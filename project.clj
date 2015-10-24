@@ -6,6 +6,7 @@
                  [datascript "0.13.0"]
                  [datascript-transit "0.2.0" :exclusions [com.cognitect/transit-clj
                                                           com.cognitect/transit-cljs]]
+                 [funcool/cuerdas "0.6.0"]
                  [hiccups "0.3.0"]
                  [io.nervous/cljs-lambda "0.1.2"]
                  [markdown-clj "0.9.75"]
