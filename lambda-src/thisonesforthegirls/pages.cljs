@@ -181,6 +181,8 @@
    "Error"
    [error-fragment]))
 
+;; Component and dependent functions
+
 (defrecord PageConfig [lambda-base html-bucket db s3-conn])
 
 (defn pages
@@ -336,7 +338,7 @@
                    {:path "admin/devotions"
                     :content (admin-template "Devotions Admin")}
                    {:path "admin/devotions/add"
-                    :content (admin-template "Devotions Admin / Add")}
+                    :content (admin-template "Devotions Admin | Add")}
                    {:path "admin/scripture"
                     :content (admin-template "Scripture Admin")}
                    {:path "admin/testimonies"
