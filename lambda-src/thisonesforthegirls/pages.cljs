@@ -383,6 +383,8 @@
    [:li [:span.sep "|"] [:a {:href "/admin/contact"} " Contact Us "]]
    [:li [:span.sep "|"] [:a {:href "/admin/logout"} " Log out "]]])
 
+(def admin-error (html error-fragment))
+
 (defn admin
   [pages]
   (html
@@ -530,8 +532,6 @@
     (go
       {:path path
        :content (admin-template title)})))
-
-(def admin-error (html error-fragment))
 
 ;; Editing functions
 
