@@ -3,6 +3,7 @@
             [clojure.string :as s]
             [com.stuartsierra.component :as component]
             [datascript.core :as d]
+            [goog.string :as gs]
             [hiccups.runtime]
             [markdown.core :refer [md->html]]
             [thisonesforthegirls.db :as db]
@@ -17,13 +18,14 @@
   ([title main-content]
    (base-template title main-content []))
   ([title main-content end-content]
-   (let [year (.getYear (Date.))]
+   (let [year (.getYear (Date.))
+         t (gs/htmlEscape title)]
      (str "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\""
           "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
           (html
            [:html {:xmlns "http://www.w3.org/1999/xhtml"}
             [:head
-             [:title (str title " | This One's for the Girls")]
+             [:title (str t " | This One's for the Girls")]
              [:meta {:http-equiv "Content-Type"
                      :content "text/html; charset=UTF-8"}]
              [:meta {:http-equiv "Content-Language" :content "en-US"}]
@@ -86,57 +88,66 @@
 
 (defn devotion-markup
   [dev]
-  [[:dt {:id (:db/id dev)}
-     [:span.dTitle (:devotion/title dev)]
-    [:span.dAuthor (str "by " (:devotion/author dev))]]
-   [:dd (md->html (or (:devotion/body dev) ""))]])
+  (let [title (gs/htmlEscape (:devotion/title dev))
+        author (gs/htmlEscape (:devotion/author dev))
+        body (gs/htmlEscape (:devotion/body dev))]
+    [[:dt {:id (:db/id dev)}
+      [:span.dTitle title]
+      [:span.dAuthor (str "by " author)]]
+     [:dd (md->html body)]]))
 
 (defn devotion-list-item
   [dev]
-  [:li [:a {:href (str "#" (:db/id dev))} (:devotion/title dev)]])
+  (let [title (gs/htmlEscape (:devotion/title dev))]
+    [:li [:a {:href (str "#" (:db/id dev))} title]]))
 
 (defn scripture-category-list-item
   [category]
-  [:li [:a {:href (str "/scripture/" (:scripture-category/slug category))}]])
+  (let [slug (gs/htmlEscape (:scripture-category/slug category))]
+    [:li [:a {:href (str "/scripture/" slug)}]]))
 
 (defn scripture-markup
   [scripture]
-  [[:dt
-    [:label (:scripture/reference scripture)]]
-   [:dd (:scripture/text scripture)]])
+  (let [reference (gs/htmlEscape (:scripture/reference scripture))
+        text (gs/htmlEscape (:scripture/text scripture))]
+    [[:dt
+      [:label reference]]
+     [:dd text]]))
 
 (defn scripture-category
   [category]
   {:s3-key (str "/scripture/" (:scripture-category/slug category))
    :body (site-template
-          (str "Scripture / " (:scripture-category/name category))
+          (str "Scripture | " (:scripture-category/name category))
           [[:div#scripture
             [:img.header {:src "/assets/scripture.gif"
                           :alt "Scripture"}]
             [:dl (mapcat scripture-markup
                          (:scripture/_category category))]
-            [:p [:a {:href "/scripture"}
-                 "Back to Categories"]]]])})
+            [:p [:a {:href "/scripture"} "Back to Categories"]]]])})
 
 (defn testimony-list-item
   [testimony]
-  [:li [:a {:href (str "/testimonies/" (:testimony/slug testimony))}]])
+  (let [slug (gs/htmlEscape (:testimony/slug testimony))]
+    [:li [:a {:href (str "/testimonies/" slug)}]]))
 
 (defn testimony
   [testimony]
   {:s3-key (str "/testimonies/" (:testimony/slug testimony))
    :body (site-template
-          (str "Testimonies / " (:testimony/title testimony))
-          [[:div#testimonies
-            [:img.header {:src "/assets/testimonies.gif"
-                          :alt "Testimonies"}]
-            [:p [:a {:href "/testimonies"}
-                 "Back to Testimony Links"]]
-            [:dl
-             [:dt (:testimony/title testimony)]
-             [:dd (:testimony/text testimony)]]
-            [:p [:a {:href "/testimonies"}
-                 "Back to Testimony Links"]]]])})
+          (str "Testimonies | " (:testimony/title testimony))
+          (let [title (gs/htmlEscape (:testimony/title testimony))
+                text (:testimony/text testimony)]
+            [[:div#testimonies
+              [:img.header {:src "/assets/testimonies.gif"
+                            :alt "Testimonies"}]
+              [:p [:a {:href "/testimonies"}
+                   "Back to Testimony Links"]]
+              [:dl
+               [:dt title]
+               [:dd text]]
+              [:p [:a {:href "/testimonies"}
+                   "Back to Testimony Links"]]]]))})
 
 (def contact-us
   (site-template
@@ -184,8 +195,9 @@
   (go
     (let [{:keys [db]} pages
           conn (<! (:conn-ch db))
-          text (md->html (or (d/q text-query @conn [:db/ident :home])
-                             ""))
+          text (->> (d/q text-query @conn [:db/ident :home])
+                    gs/htmlEscape
+                    md->html)
           page (site-template
                 "Welcome"
                 [[:div#welcome [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
@@ -200,8 +212,9 @@
   (go
     (let [{:keys [db]} pages
           conn (<! (:conn-ch db))
-          text (md->html (or (d/q text-query @conn [:db/ident :about-us])
-                             ""))
+          text (->> (d/q text-query @conn [:db/ident :about-us])
+                    gs/htmlEscape
+                    md->html)
           page (site-template
                 "About Us"
                 [[:div#about
@@ -215,8 +228,9 @@
   (go
     (let [{:keys [db]} pages
           conn (<! (:conn-ch db))
-          text (md->html (or (d/q text-query @conn [:db/ident :resources])
-                             ""))
+          text (->> (d/q text-query @conn [:db/ident :resources])
+                    gs/htmlEscape
+                    md->html)
           page (site-template
                 "Community Resources"
                 [[:div#resources
@@ -383,7 +397,7 @@
     (go
       (let [{:keys [lambda-base db]} pages
             conn (<! (:conn-ch db))
-            text (d/q text-query @conn [:db/ident ident])]
+            text (gs/htmlEscape (d/q text-query @conn [:db/ident ident]))]
         (html
          [:img.header header-img]
          [:p#error]
@@ -412,8 +426,8 @@
 
 (defn admin-devotion-li
   [devotion]
-  [:li [:a {:href (str "/edit/" (:db/id devotion))}
-        (:devotion/title devotion)]])
+  (let [title (gs/htmlEscape (:devotion/title devotion))]
+    [:li [:a {:href (str "/edit/" (:db/id devotion))} title]]))
 
 (defn admin-devotions
   [pages]
@@ -430,25 +444,34 @@
        [:h4 "Administration Links"]
        admin-footer))))
 
+(defn admin-devotions-template
+  ([pages]
+   (admin-devotions-template pages {}))
+  ([pages devotion]
+   (let [{:keys [lambda-base]} pages
+         title (gs/htmlEscape (:devotion/title devotion))
+         author (gs/htmlEscape (:devotion/author devotion))
+         body (gs/htmlEscape (:devotion/body devotion))]
+     (html
+      [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
+      [:p#error]
+      [:h2#success]
+      [:form {:action (str lambda-base "edit-page") :method "post"}
+       [:dl
+        [:dt [:label {:for "title"} "Title"]]
+        [:dd [:input {:type "text" :name "title" :value title}]]
+        [:dt [:label {:for "author"} "Author"]]
+        [:dd [:input {:type "text" :name "author" :value author}]]
+        [:dt [:label {:for "devotion"} "Devotion"]]
+        [:dd [:textarea {:name "devotion" :rows "24" :cols "80"} body]]
+        [:dt "&nbsp;"]
+        [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+      [:h4 "Administration Links"]
+      admin-footer))))
+
 (defn admin-devotions-add
   [pages]
-  (let [{:keys [lambda-base]} pages]
-    (html
-     [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
-     [:p#error]
-     [:h2#success]
-     [:form {:action (str lambda-base "edit-page") :method "post"}
-      [:dl
-       [:dt [:label {:for "title"} "Title"]]
-       [:dd [:input {:type "text" :name "title"}]]
-       [:dt [:label {:for "author"} "Author"]]
-       [:dd [:input {:type "text" :name "author"}]]
-       [:dt [:label {:for "devotion"} "Devotion"]]
-       [:dd [:textarea {:name "devotion" :rows "24" :cols "80"}]]
-       [:dt "&nbsp;"]
-       [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
-     [:h4 "Administration Links"]
-     admin-footer)))
+  (admin-devotions-template pages))
 
 (def admin-error (html error-fragment))
 
