@@ -87,10 +87,10 @@
 (defn generate-all-pages
   [lambda-fns]
   (fn [event context]
-    (let [{:keys [db pages]} lambda-fns]
+    (let [{:keys [pages]} lambda-fns]
       (go
         (let [put-ch (->> (<! (p/all-page-info pages))
-                          (map (p/page-info->put-ch lambda-fns))
+                          (map (p/page-info->put-ch pages))
                           merge)
               error (loop []
                       (let [[err :as val] (<! put-ch)]
@@ -140,6 +140,8 @@
             "/admin/welcome" (<! (p/admin-home pages))
             "/admin/about" (<! (p/admin-about-us pages))
             "/admin/community-resources" (<! (p/admin-resources pages))
+            "/admin/devotions" (<! (p/admin-devotions pages))
+            "/admin/devotions/add" (p/admin-devotions-add pages)
             p/admin-error)
           (p/login-form pages))))))
 
@@ -155,6 +157,7 @@
                 (cond
                   (= path "/admin/welcome") p/edit-home
                   (= path "/admin/about") p/edit-about-us
-                  (= path "/admin/community-resources") p/edit-resources)]
+                  (= path "/admin/community-resources") p/edit-resources
+                  (= path "/admin/devotions/add") p/add-devotion)]
             (<! (edit-fn pages event)))
           (js/Error "Please log in"))))))

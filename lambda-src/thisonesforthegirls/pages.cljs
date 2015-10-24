@@ -86,14 +86,14 @@
 
 (defn devotion-markup
   [dev]
-  [[:dt
+  [[:dt {:id (:db/id dev)}
      [:span.dTitle (:devotion/title dev)]
     [:span.dAuthor (str "by " (:devotion/author dev))]]
-   [:dd (:devotion/body dev)]])
+   [:dd (md->html (or (:devotion/body dev) ""))]])
 
 (defn devotion-list-item
   [dev]
-  [:li [:a {:href (str "#" (:db/id dev))}]])
+  [:li [:a {:href (str "#" (:db/id dev))} (:devotion/title dev)]])
 
 (defn scripture-category-list-item
   [category]
@@ -306,24 +306,26 @@
                    (<! (archived-devotions pages))
                    (<! (scripture-categories pages))
                    (<! (testimonies pages))
-                   {:s3-key "contact"
-                    :body contact-us}
-                   {:s3-key "error"
-                    :body error}
-                   {:s3-key "admin"
-                    :body (admin-template "Admin")}
-                   {:s3-key "admin/welcome"
-                    :body (admin-template "Welcome Admin")}
-                   {:s3-key "admin/about"
-                    :body (admin-template "About Us Admin")}
-                   {:s3-key "admin/community-resources"
-                    :body (admin-template "Community Resources Admin")}
-                   {:s3-key "admin/devotions"
-                    :body (admin-template "Devotions Admin")}
-                   {:s3-key "admin/scripture"
-                    :body (admin-template "Scripture Admin")}
-                   {:s3-key "admin/testimonies"
-                    :body (admin-template "Testimonies Admin")}]
+                   {:path "contact"
+                    :content contact-us}
+                   {:path "error"
+                    :content error}
+                   {:path "admin"
+                    :content (admin-template "Admin")}
+                   {:path "admin/welcome"
+                    :content (admin-template "Welcome Admin")}
+                   {:path "admin/about"
+                    :content (admin-template "About Us Admin")}
+                   {:path "admin/community-resources"
+                    :content (admin-template "Community Resources Admin")}
+                   {:path "admin/devotions"
+                    :content (admin-template "Devotions Admin")}
+                   {:path "admin/devotions/add"
+                    :content (admin-template "Devotions Admin / Add")}
+                   {:path "admin/scripture"
+                    :content (admin-template "Scripture Admin")}
+                   {:path "admin/testimonies"
+                    :content (admin-template "Testimonies Admin")}]
           s-cats (->> (d/q '[:find [(pull ?e [* {:scripture/_category [*]}]) ...]
                              :where [?e :scripture-category/name]] @conn)
                       (map scripture-category))
@@ -408,16 +410,56 @@
                                    :alt "Community Resources"}
                                   "Community Resources Text"))
 
+(defn admin-devotion-li
+  [devotion]
+  [:li [:a {:href (str "/edit/" (:db/id devotion))}
+        (:devotion/title devotion)]])
+
+(defn admin-devotions
+  [pages]
+  (go
+    (let [{:keys [db]} pages
+          conn (<! (:conn-ch db))
+          devotions (->> (d/q '[:find [(pull ?e [*]) ...]
+                                :where [?e :devotion/featured?]] @conn)
+                         (sort-by :devotion/created-at #(compare %2 %1)))]
+      (html
+       [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
+       [:ul (map admin-devotion-li devotions)]
+       [:p [:a {:href "/admin/devotions/add"} "Add a new Devotion"]]
+       [:h4 "Administration Links"]
+       admin-footer))))
+
+(defn admin-devotions-add
+  [pages]
+  (let [{:keys [lambda-base]} pages]
+    (html
+     [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
+     [:p#error]
+     [:h2#success]
+     [:form {:action (str lambda-base "edit-page") :method "post"}
+      [:dl
+       [:dt [:label {:for "title"} "Title"]]
+       [:dd [:input {:type "text" :name "title"}]]
+       [:dt [:label {:for "author"} "Author"]]
+       [:dd [:input {:type "text" :name "author"}]]
+       [:dt [:label {:for "devotion"} "Devotion"]]
+       [:dd [:textarea {:name "devotion" :rows "24" :cols "80"}]]
+       [:dt "&nbsp;"]
+       [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+     [:h4 "Administration Links"]
+     admin-footer)))
+
 (def admin-error (html error-fragment))
 
 ;; Editing functions
 
 (defn page-info->put-ch
   [pages]
-  (fn [{:keys [s3-key body]}]
+  (fn [{:keys [path content]}]
     (s3/put-obj!-ch (:s3-conn pages)
-                    (:html-bucket pages) s3-key body
-                    {:ContentLength (count body)
+                    (:html-bucket pages) path content
+                    {:ContentLength (count content)
                      :ContentType "text/html"})))
 
 (defn generate-page
@@ -426,7 +468,7 @@
     (go
       (let [{:keys [path content]} (<! (gen-fn pages))]
         (<! ((page-info->put-ch pages)
-             {:s3-key path :body content}))))))
+             {:path path :content content}))))))
 
 (defn generate-pages
   [pages gen-fns success-msg]
@@ -465,3 +507,30 @@
 (def edit-about-us (edit-basic :about-us about-us))
 
 (def edit-resources (edit-basic :resources resources))
+
+(defn add-devotion
+  [pages event]
+  (go
+    (let [{:keys [db]} pages
+          {:keys [title author devotion]} event
+          conn (<! (:conn-ch db))
+          featured-devotions (d/q '[:find [?e ...]
+                                    :where [?e :devotion/featured? true]]
+                                  @conn)
+          tx (mapv (fn [d-id] {:db/id d-id :devotion/featured? false})
+                   featured-devotions)
+          [err] (<! (db/transact!-ch
+                     db
+                     (into tx [{:db/id -1
+                                :devotion/author author
+                                :devotion/title title
+                                :devotion/body devotion
+                                :devotion/created-at (js/Date.)
+                                :devotion/featured? true}])))]
+      (if err
+        (js/Error. err)
+        (<! (generate-pages
+             pages
+             [featured-devotion
+              archived-devotions]
+             "The devotion was successfully added"))))))
