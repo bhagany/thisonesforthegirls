@@ -489,6 +489,13 @@
                         [:devotion/slug slug])]
       (admin-devotions-template pages devotion))))
 
+(defn dynamic-admin-page
+  [title path]
+  (fn [_]
+    (go
+      {:path path
+       :content (admin-template title)})))
+
 (def admin-error (html error-fragment))
 
 ;; Editing functions
@@ -546,13 +553,6 @@
 (def edit-about-us (edit-basic :about-us about-us))
 
 (def edit-resources (edit-basic :resources resources))
-
-(defn dynamic-admin-page
-  [title path]
-  (fn [_]
-    (go
-      {:path path
-       :content (admin-template title)})))
 
 (defn add-devotion
   [pages event]
