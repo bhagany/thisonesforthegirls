@@ -4,29 +4,20 @@
             [com.stuartsierra.component :as component]
             [datascript.core :as d]
             [thisonesforthegirls.db :as db]
-            [thisonesforthegirls.s3 :as s3]
             [thisonesforthegirls.pages :as p])
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:import [goog.object]))
 
 
-(defrecord LambdaFns [db s3-conn html-bucket])
+(defrecord LambdaFns [db pages])
 
 (defn lambda-fns
-  [html-bucket]
+  []
   (component/using
-   (map->LambdaFns {:html-bucket html-bucket})
-   [:db :s3-conn :pages]))
+   (map->LambdaFns {})
+   [:db :pages]))
 
 ;; Helpers
-
-(defn page-info->ch
-  [lambda-fns]
-  (fn [{:keys [s3-key body]}]
-    (s3/put-obj!-ch (:s3-conn lambda-fns)
-                    (:html-bucket lambda-fns) s3-key body
-                    {:ContentLength (count body)
-                     :ContentType "text/html"})))
 
 (defn get-secret
   [db]
@@ -99,7 +90,7 @@
     (let [{:keys [db pages]} lambda-fns]
       (go
         (let [put-ch (->> (<! (p/all-page-info pages))
-                          (map (page-info->ch lambda-fns))
+                          (map (p/page-info->put-ch lambda-fns))
                           merge)
               error (loop []
                       (let [[err :as val] (<! put-ch)]
@@ -160,20 +151,10 @@
             {:keys [pages db]} lambda-fns
             conn (<! (:conn-ch db))]
         (if (check-login-token @conn jwt)
-          (let [[edit-fn gen-fn s3-key]
-                (case path
-                  "/admin/welcome" [p/edit-home p/home "home"]
-                  "/admin/about" [p/edit-about-us p/about-us "about"]
-                  "/admin/community-resources" [p/edit-resources
-                                                p/resources
-                                                "resources"])
-                edit-result (<! (edit-fn pages event))]
-            (if (instance? js/Error edit-result)
-              edit-result
-              (let [body (<! (gen-fn pages))
-                    [put-err] (<! ((page-info->ch lambda-fns)
-                                   {:s3-key s3-key :body body}))]
-                (if put-err
-                  put-err
-                  edit-result))))
+          (let [edit-fn
+                (cond
+                  (= path "/admin/welcome") p/edit-home
+                  (= path "/admin/about") p/edit-about-us
+                  (= path "/admin/community-resources") p/edit-resources)]
+            (<! (edit-fn pages event)))
           (js/Error "Please log in"))))))

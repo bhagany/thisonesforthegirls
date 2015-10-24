@@ -1,11 +1,12 @@
 (ns thisonesforthegirls.pages
-  (:require [cljs.core.async :refer [<!]]
+  (:require [cljs.core.async :as async :refer [<!]]
             [clojure.string :as s]
             [com.stuartsierra.component :as component]
             [datascript.core :as d]
             [hiccups.runtime]
             [markdown.core :refer [md->html]]
-            [thisonesforthegirls.db :as db])
+            [thisonesforthegirls.db :as db]
+            [thisonesforthegirls.s3 :as s3])
   (:import [goog.date Date])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [hiccups.core :as hiccups :refer [html]]))
@@ -168,13 +169,13 @@
    "Error"
    [error-fragment]))
 
-(defrecord PageConfig [lambda-base db])
+(defrecord PageConfig [lambda-base html-bucket db s3-conn])
 
 (defn pages
-  [lambda-base]
+  [lambda-base html-bucket]
   (component/using
-   (map->PageConfig {:lambda-base lambda-base})
-   [:db]))
+   (map->PageConfig {:lambda-base lambda-base :html-bucket html-bucket})
+   [:db :s3-conn]))
 
 (def text-query '[:find ?text . :in $ ?e :where [?e :page/text ?text]])
 
@@ -190,8 +191,9 @@
                 [[:div#welcome [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
                   "this text will not occur"
                   [:img#youare {:src "/assets/you-are.gif"
-                                :alt "You are loved..."}]]])]
-      (s/replace page "this text will not occur" text))))
+                                :alt "You are loved..."}]]])
+          content (s/replace page "this text will not occur" text)]
+      {:path "home" :content content})))
 
 (defn about-us
   [pages]
@@ -204,8 +206,9 @@
                 "About Us"
                 [[:div#about
                   [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
-                  "this text will not occur"]])]
-      (s/replace page "this text will not occur" text))))
+                  "this text will not occur"]])
+          content (s/replace page "this text will not occur" text)]
+      {:path "about" :content content})))
 
 (defn resources
   [pages]
@@ -219,8 +222,9 @@
                 [[:div#resources
                   [:img.header {:src "/assets/community-resources.gif"
                                 :alt "Community Resources"}]
-                  "this text will not occur"]])]
-      (s/replace page "this text will not occur" text))))
+                  "this text will not occur"]])
+          content (s/replace page "this text will not occur" text)]
+      {:path "community-resources" :content content})))
 
 (defn featured-devotion
   [pages]
@@ -228,13 +232,15 @@
     (let [{:keys [db]} pages
           conn (<! (:conn-ch db))
           devotion (d/q '[:find (pull ?e [*]) .
-                          :where [?e :devotion/featured? true]] @conn)]
-      (site-template
-       "Devotions"
-       [[:div#devotions
-         [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
-         (into [:dl] (devotion-markup devotion))
-         [:p [:a {:href "/devotions/archive"} "Read more"]]]]))))
+                          :where [?e :devotion/featured? true]] @conn)
+          content (site-template
+                   "Devotions"
+                   [[:div#devotions
+                     [:img.header {:src "/assets/devotions.gif"
+                                   :alt "Devotions"}]
+                     (into [:dl] (devotion-markup devotion))
+                     [:p [:a {:href "/devotions/archive"} "Read more"]]]])]
+      {:path "devotions" :content content})))
 
 (defn archived-devotions
   [pages]
@@ -243,16 +249,18 @@
           conn (<! (:conn-ch db))
           devotions (->> (d/q '[:find [(pull ?e [*]) ...]
                                 :where [?e :devotion/featured? false]] @conn)
-                         (sort-by :devotion/created-at #(compare %2 %1)))]
-      (site-template
-       "Devotions Archive"
-       [[:div#devotions
-         [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
-         [:a {:href "/devotions"} "Back to Featured Devotion"]
-         [:h3 "Archive"]
-         [:ul (map devotion-list-item devotions)]
-         [:dl (mapcat devotion-markup devotions)]
-         [:a {:href "/devotions"} "Back to Featured Devotion"]]]))))
+                         (sort-by :devotion/created-at #(compare %2 %1)))
+          content (site-template
+                   "Devotions Archive"
+                   [[:div#devotions
+                     [:img.header {:src "/assets/devotions.gif"
+                                   :alt "Devotions"}]
+                     [:a {:href "/devotions"} "Back to Featured Devotion"]
+                     [:h3 "Archive"]
+                     [:ul (map devotion-list-item devotions)]
+                     [:dl (mapcat devotion-markup devotions)]
+                     [:a {:href "/devotions"} "Back to Featured Devotion"]]])]
+      {:path "devotions/archive" :content content})))
 
 (defn scripture-categories
   [pages]
@@ -261,12 +269,14 @@
           conn (<! (:conn-ch db))
           categories (->> (d/q '[:find [(pull ?e [*]) ...]
                                  :where [?e :scripture-category/name]] @conn)
-                          (sort-by :scripture-category/name))]
-      (site-template
-       "Scripture"
-       [[:div#scripture
-         [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
-         [:ul (map scripture-category-list-item categories)]]]))))
+                          (sort-by :scripture-category/name))
+          content (site-template
+                   "Scripture"
+                   [[:div#scripture
+                     [:img.header {:src "/assets/scripture.gif"
+                                   :alt "Scripture"}]
+                     [:ul (map scripture-category-list-item categories)]]])]
+      {:path "scripture" :content content})))
 
 (defn testimonies
   [pages]
@@ -275,32 +285,27 @@
           conn (<! (:conn-ch db))
           testimonies (->> (d/q '[:find [(pull ?e [*]) ...]
                                   :where [?e :testimony/title]] @conn)
-                           (sort-by :testimony/title))]
-      (site-template
-       "Testimonies"
-       [[:div#testimonies
-         [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]
-         [:ul (map testimony-list-item testimonies)]]]))))
+                           (sort-by :testimony/title))
+          content (site-template
+                   "Testimonies"
+                   [[:div#testimonies
+                     [:img.header {:src "/assets/testimonies.gif"
+                                   :alt "Testimonies"}]
+                     [:ul (map testimony-list-item testimonies)]]])]
+      {:path "testimonies" :content content})))
 
 (defn all-page-info
   [pages]
   (go
     (let [{:keys [db]} pages
           conn (<! (:conn-ch db))
-          defined [{:s3-key "home"
-                    :body (<! (home pages))}
-                   {:s3-key "about"
-                    :body (<! (about-us pages))}
-                   {:s3-key "community-resources"
-                    :body (<! (resources pages))}
-                   {:s3-key "devotions"
-                    :body (<! (featured-devotion pages))}
-                   {:s3-key "devotions/archive"
-                    :body (<! (archived-devotions pages))}
-                   {:s3-key "scripture"
-                    :body (<! (scripture-categories pages))}
-                   {:s3-key "testimonies"
-                    :body (<! (testimonies pages))}
+          defined [(<! (home pages))
+                   (<! (about-us pages))
+                   (<! (resources pages))
+                   (<! (featured-devotion pages))
+                   (<! (archived-devotions pages))
+                   (<! (scripture-categories pages))
+                   (<! (testimonies pages))
                    {:s3-key "contact"
                     :body contact-us}
                    {:s3-key "error"
@@ -407,8 +412,38 @@
 
 ;; Editing functions
 
+(defn page-info->put-ch
+  [pages]
+  (fn [{:keys [s3-key body]}]
+    (s3/put-obj!-ch (:s3-conn pages)
+                    (:html-bucket pages) s3-key body
+                    {:ContentLength (count body)
+                     :ContentType "text/html"})))
+
+(defn generate-page
+  [pages]
+  (fn [gen-fn]
+    (go
+      (let [{:keys [path content]} (<! (gen-fn pages))]
+        (<! ((page-info->put-ch pages)
+             {:s3-key path :body content}))))))
+
+(defn generate-pages
+  [pages gen-fns success-msg]
+  (go
+    (let [put-ch (async/merge (map (generate-page pages) gen-fns))
+          error (loop []
+                  (let [[err :as val] (<! put-ch)]
+                    (when err
+                      (js/Error. err))
+                    (when-not (nil? val)
+                      (recur))))]
+      (if error
+        error
+        success-msg))))
+
 (defn edit-basic
-  [ident]
+  [ident gen-fn]
   (fn [pages event]
     (go
       (let [{:keys [db]} pages
@@ -420,10 +455,13 @@
                          :page/text text}]))]
         (if err
           (js/Error. err)
-          "The text was successfully edited")))))
+          (<! (generate-pages
+               pages
+               [gen-fn]
+               "The text was successfully edited")))))))
 
-(def edit-home (edit-basic :home))
+(def edit-home (edit-basic :home home))
 
-(def edit-about-us (edit-basic :about-us))
+(def edit-about-us (edit-basic :about-us about-us))
 
-(def edit-resources (edit-basic :resources))
+(def edit-resources (edit-basic :resources resources))

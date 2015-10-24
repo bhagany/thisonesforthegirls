@@ -16,8 +16,8 @@
             :port 8080}
    :db {:bucket "/www/thisonesforthegirls/fake-s3/private"
         :key "db"}
-   :lambda-fns {:html-bucket "/www/thisonesforthegirls/fake-s3/public"}
-   :pages {:lambda-base "/lambda-fns/"}})
+   :pages {:lambda-base "/lambda-fns/"
+           :html-bucket "/www/thisonesforthegirls/fake-s3/public"}})
 
 (defn dev-system [config]
   (component/system-map
@@ -28,8 +28,9 @@
    :s3-conn (s3/s3-dev-connection)
    :db (db/datascript-db (get-in config [:db :bucket])
                          (get-in config [:db :key]))
-   :lambda-fns (l/lambda-fns (get-in config [:lambda-fns :html-bucket]))
-   :pages (p/pages (get-in config [:pages :lambda-base]))))
+   :lambda-fns (l/lambda-fns)
+   :pages (p/pages (get-in config [:pages :lambda-base])
+                   (get-in config [:pages :html-bucket]))))
 
 (defonce system (atom nil))
 

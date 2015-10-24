@@ -10,16 +10,17 @@
 (def config
   {:db {:bucket "thisonesforthegirls.org-private"
         :key "db"}
-   :lambda-fns {:html-bucket "thisonesforthegirls.org"}
-   :pages {:lambda-base ""}})
+   :pages {:lambda-base ""
+           :html-bucket "thisonesforthegirls.org"}})
 
 (defn prod-system [config]
   (component/system-map
    :s3-conn (s3/s3-connection)
    :db (db/datascript-db (get-in config [:db :bucket])
                          (get-in config [:db :key]))
-   :lambda-fns (l/lambda-fns (get-in config [:lambda-fns :html-bucket]))
-   :pages (p/pages (get-in config [:pages :lambda-base]))))
+   :lambda-fns (l/lambda-fns)
+   :pages (p/pages (get-in config [:pages :lambda-base])
+                   (get-in config [:pages :html-bucket]))))
 
 (def system (prod-system config))
 
