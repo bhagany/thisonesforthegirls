@@ -26,7 +26,7 @@
 
    :devotion/author {}
    :devotion/title {}
-   :devotion/slug {}
+   :devotion/slug {:db/unique :db.unique/identity}
    :devotion/body {}
    :devotion/created-at {}
    :devotion/featured? {}
@@ -44,7 +44,7 @@
    :scripture/reference {}
 
    :testimony/title {}
-   :testimony/slug {}
+   :testimony/slug {:db/unique :db.unique/identity}
    :testimony/text {}})
 
 (def my-write-handlers (assoc dt/write-handlers Iter (transit/ListHandler.)))
