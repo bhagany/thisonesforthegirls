@@ -585,3 +585,28 @@
                (str "Devotions Admin | Edit \"" title "\"")
                (str "admin/devotions/edit/" slug))]
              "The devotion was successfully added"))))))
+
+(defn edit-devotion
+  [pages event]
+  (go
+    (let [{:keys [db]} pages
+          {:keys [path title author devotion]} event
+          old-slug (s/replace path "/admin/devotions/edit/" "")
+          slug (str/slugify title)
+          [err] (<! (db/transact!-ch
+                     db
+                     [{:db/id [:devotion/slug old-slug]
+                       :devotion/author author
+                       :devotion/title title
+                       :devotion/slug slug
+                       :devotion/body devotion}]))]
+      (if err
+        (js/Error. err)
+        (<! (generate-pages
+             pages
+             [featured-devotion
+              archived-devotions
+              (dynamic-admin-page
+               (str "Devotions Admin | Edit \"" title "\"")
+               (str "admin/devotions/edit/" slug))]
+             "The devotion was successfully edited"))))))

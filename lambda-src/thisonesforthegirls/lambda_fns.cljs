@@ -165,6 +165,7 @@
                   (= path "/admin/welcome") p/edit-home
                   (= path "/admin/about") p/edit-about-us
                   (= path "/admin/community-resources") p/edit-resources
-                  (= path "/admin/devotions/add") p/add-devotion)]
+                  (= path "/admin/devotions/add") p/add-devotion
+                  (s/starts-with? path "/admin/devotions/edit/") p/edit-devotion)]
             (<! (edit-fn pages event)))
           (js/Error "Please log in"))))))
