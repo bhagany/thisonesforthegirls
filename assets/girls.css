@@ -209,6 +209,11 @@ dd.delForm {
   margin: 0;
 }
 
+dd.delForm form {
+  display: inline;
+  margin: 0;
+}
+
 dd.address textarea {
   height: 100px;
 }

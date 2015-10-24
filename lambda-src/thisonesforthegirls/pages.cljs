@@ -470,6 +470,11 @@
         [:dd [:textarea {:name "devotion" :rows "24" :cols "80"} body]]
         [:dt "&nbsp;"]
         [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+      (when-not (empty? devotion)
+        [:p
+         [:a {:href (str "/admin/devotions/delete/"
+                         (:devotion/slug devotion))}
+          "Delete this devotion"]])
       [:h4 "Administration Links"]
       admin-footer))))
 
@@ -480,8 +485,8 @@
 (defn admin-devotions-edit
   [pages path]
   (go
-    (let [slug (s/replace path "/admin/devotions/edit/" "")
-          {:keys [db]} pages
+    (let [{:keys [db]} pages
+          slug (s/replace path "/admin/devotions/edit/" "")
           conn (<! (:conn-ch db))
           devotion (d/q '[:find (pull ?dev-id [*]) .
                           :in $ ?dev-id]
@@ -490,6 +495,34 @@
       (if (empty? devotion)
         admin-error
         (admin-devotions-template pages devotion)))))
+
+(defn admin-devotions-delete
+  [pages path]
+  (go
+    (let [{:keys [db lambda-base]} pages
+          slug (s/replace path "/admin/devotions/delete/" "")
+          conn (<! (:conn-ch db))
+          devotion (d/q '[:find (pull ?dev-id [*]) .
+                          :in $ ?dev-id]
+                        @conn
+                        [:devotion/slug slug])]
+      (if (empty? devotion)
+        admin-error
+        (let [title (gs/htmlEscape (:devotion/title devotion))]
+          (html
+           [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
+           [:p#error]
+           [:h2#success]
+           [:h2 (str "Do you want to delete \"" title "\"?")]
+           [:dl
+            [:dd.delForm [:form {:action (str lambda-base "delete-page")
+                                 :method "post"}
+                  [:input {:type "submit" :name "yes" :value "Yes"}]]]
+            [:dd.delForm [:form {:action "/admin/devotions"
+                                 :method "get"}
+                  [:input {:type "submit" :name "no" :value "No"}]]]]
+           [:h4 "Administration Links"]
+           admin-footer))))))
 
 (defn dynamic-admin-page
   [title path]
@@ -585,7 +618,10 @@
               archived-devotions
               (dynamic-admin-page
                (str "Devotions Admin | Edit \"" title "\"")
-               (str "admin/devotions/edit/" slug))]
+               (str "admin/devotions/edit/" slug))
+              (dynamic-admin-page
+               (str "Devotions Admin | Delete \"" title "\"")
+               (str "admin/devotions/delete/" slug))]
              "The devotion was successfully added"))))))
 
 (defn edit-devotion
@@ -610,5 +646,8 @@
               archived-devotions
               (dynamic-admin-page
                (str "Devotions Admin | Edit \"" title "\"")
-               (str "admin/devotions/edit/" slug))]
+               (str "admin/devotions/edit/" slug))
+              (dynamic-admin-page
+               (str "Devotions Admin | Delete \"" title "\"")
+               (str "admin/devotions/delete/" slug))]
              "The devotion was successfully edited"))))))

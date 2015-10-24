@@ -138,6 +138,7 @@
       (= path "/admin/devotions") (<! (p/admin-devotions pages))
       (= path "/admin/devotions/add") (p/admin-devotions-add pages)
       (s/starts-with? path "/admin/devotions/edit/") (<! (p/admin-devotions-edit pages path))
+      (s/starts-with? path "/admin/devotions/delete/") (<! (p/admin-devotions-delete pages path))
       :else p/admin-error)))
 
 (defn admin-page
