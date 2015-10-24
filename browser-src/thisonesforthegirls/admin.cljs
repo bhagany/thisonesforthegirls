@@ -53,27 +53,29 @@
   []
   (let [body (aget (dom/getElementsByTagNameAndClass "body") 0)]
     (letfn [(cb [e]
-              (.preventDefault e)
               (let [form (aget (dom/getElementsByTagNameAndClass "form") 0)
-                    action (.getAttribute form "action")
-                    form-data (f/getFormDataMap form)
-                    loc (.. js/window -location -href)
-                    path (.getPath (goog.Uri.parse loc))
-                    jwt (cookies/get "jwt")
-                    headers (if jwt
-                              #js {:x-jwt jwt}
-                              #js {})
-                    xhr-json (->> (goog.object/get form-data "map_")
-                                  js->clj
-                                  (map (fn [[k v]] [k (v 0)]))
-                                  (into {:path path})
-                                  clj->js
-                                  (.stringify js/JSON))]
-                (goog.net.XhrIo.send action
-                                     (handle-ajax-response action)
-                                     "POST"
-                                     xhr-json
-                                     headers)))]
+                    method (.getAttribute form "method")]
+                (when (= method "get")
+                  (.preventDefault e)
+                  (let [action (.getAttribute form "action")
+                        form-data (f/getFormDataMap form)
+                        loc (.. js/window -location -href)
+                        path (.getPath (goog.Uri.parse loc))
+                        jwt (cookies/get "jwt")
+                        headers (if jwt
+                                  #js {:x-jwt jwt}
+                                  #js {})
+                        xhr-json (->> (goog.object/get form-data "map_")
+                                      js->clj
+                                      (map (fn [[k v]] [k (v 0)]))
+                                      (into {:path path})
+                                      clj->js
+                                      (.stringify js/JSON))]
+                    (goog.net.XhrIo.send action
+                                         (handle-ajax-response action)
+                                         "POST"
+                                         xhr-json
+                                         headers)))))]
       (e/listen body e/EventType.SUBMIT cb))))
 
 (defonce get-page
