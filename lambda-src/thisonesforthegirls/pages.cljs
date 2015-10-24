@@ -487,7 +487,9 @@
                           :in $ ?dev-id]
                         @conn
                         [:devotion/slug slug])]
-      (admin-devotions-template pages devotion))))
+      (if (empty? devotion)
+        admin-error
+        (admin-devotions-template pages devotion)))))
 
 (defn dynamic-admin-page
   [title path]
