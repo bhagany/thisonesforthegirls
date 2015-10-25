@@ -993,7 +993,7 @@
   [pages event]
   (go
     (let [{:keys [db]} pages
-          {:keys [path query]} event
+          {:keys [query]} event
           slug (get-query-param query "slug")
           conn (<! (:conn-ch db))
           [err] (<! (db/transact!-ch
