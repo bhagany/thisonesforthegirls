@@ -8,7 +8,8 @@
   (get-obj-ch [this bucket key-name])
   (put-obj!-ch
     [this bucket key-name body]
-    [this bucket key-name body options]))
+    [this bucket key-name body options])
+  (delete-obj!-ch [this bucket key-name]))
 
 (defrecord S3Conn [conn]
   component/Lifecycle
@@ -45,6 +46,16 @@
                     (go
                       (>! ch [err obj])
                       (close! ch))))
+      ch))
+  (delete-obj!-ch [_ bucket key-name]
+    (let [ch (chan)
+          params #js {:Bucket bucket :Key key-name}]
+      (.deleteObject conn
+                     params
+                     (fn [err obj]
+                       (go
+                         (>! ch [err obj])
+                         (close! ch))))
       ch)))
 
 (defn s3-connection

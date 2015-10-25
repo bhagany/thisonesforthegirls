@@ -42,7 +42,20 @@
         (close! ch))
       ch))
   (put-obj!-ch [this bucket key-name body _]
-    (s3/put-obj!-ch this bucket key-name body)))
+    (s3/put-obj!-ch this bucket key-name body))
+  (delete-obj!-ch [_ bucket key-name]
+    (let [ch (chan)
+          fs (node/require "fs")
+          filename (str bucket "/" (s/replace key-name "/" "___"))]
+      (go
+        (try
+          (do
+            (.unlinkSync fs filename "utf8")
+            (>! ch [nil "that totally worked"]))
+          (catch :default e
+            (>! ch [e nil])))
+        (close! ch))
+      ch)))
 
 (defn s3-dev-connection
   []
