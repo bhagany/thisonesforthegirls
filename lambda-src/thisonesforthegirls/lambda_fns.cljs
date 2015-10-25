@@ -139,6 +139,10 @@
       (= path "/admin/devotions/add") (p/admin-devotions-add pages)
       (s/starts-with? path "/admin/devotions/edit") (<! (p/admin-devotions-edit pages query))
       (s/starts-with? path "/admin/devotions/delete") (<! (p/admin-devotions-delete pages query))
+      (= path "/admin/testimonies") (<! (p/admin-testimonies pages))
+      (= path "/admin/testimonies/add") (p/admin-testimonies-add pages)
+      (s/starts-with? path "/admin/testimonies/edit") (<! (p/admin-testimonies-edit pages query))
+      (s/starts-with? path "/admin/testimonies/delete") (<! (p/admin-testimonies-delete pages query))
       :else p/admin-error)))
 
 (defn admin-page
@@ -167,7 +171,9 @@
                   (= path "/admin/about") p/edit-about-us
                   (= path "/admin/community-resources") p/edit-resources
                   (= path "/admin/devotions/add") p/add-devotion
-                  (s/starts-with? path "/admin/devotions/edit") p/edit-devotion)]
+                  (s/starts-with? path "/admin/devotions/edit") p/edit-devotion
+                  (= path "/admin/testimonies/add") p/add-testimony
+                  (s/starts-with? path "/admin/testimonies/edit") p/edit-testimony)]
             (<! (edit-fn pages event)))
           (js/Error "Please log in"))))))
 
@@ -181,6 +187,7 @@
         (if (check-login-token @conn jwt)
           (let [delete-fn
                 (cond
-                  (s/starts-with? path "/admin/devotions/delete") p/delete-devotion)]
+                  (s/starts-with? path "/admin/devotions/delete") p/delete-devotion
+                  (s/starts-with? path "/admin/testimonies/delete") p/delete-testimony)]
             (<! (delete-fn pages event)))
           (js/Error "Please log in"))))))

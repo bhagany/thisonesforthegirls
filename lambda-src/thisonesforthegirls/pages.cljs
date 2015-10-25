@@ -130,26 +130,29 @@
 
 (defn testimony-list-item
   [testimony]
-  (let [slug (gs/htmlEscape (:testimony/slug testimony))]
-    [:li [:a {:href (str "/testimonies/" slug)}]]))
+  (let [title (gs/htmlEscape (:testimony/title testimony))]
+    [:li [:a {:href (str "/testimonies/" (:testimony/slug testimony))}
+          title]]))
 
 (defn testimony
-  [testimony]
-  {:s3-key (str "/testimonies/" (:testimony/slug testimony))
-   :body (site-template
-          (str "Testimonies | " (:testimony/title testimony))
-          (let [title (gs/htmlEscape (:testimony/title testimony))
-                text (:testimony/text testimony)]
-            [[:div#testimonies
-              [:img.header {:src "/assets/testimonies.gif"
-                            :alt "Testimonies"}]
-              [:p [:a {:href "/testimonies"}
-                   "Back to Testimony Links"]]
-              [:dl
-               [:dt title]
-               [:dd text]]
-              [:p [:a {:href "/testimonies"}
-                   "Back to Testimony Links"]]]]))})
+  [entity]
+  (fn [_]
+    (go
+      {:path (str "testimonies/" (:testimony/slug entity))
+       :content (site-template
+                 (str "Testimonies | " (:testimony/title entity))
+                 (let [title (gs/htmlEscape (:testimony/title entity))
+                       body (gs/htmlEscape (:testimony/body entity))]
+                   [[:div#testimonies
+                     [:img.header {:src "/assets/testimonies.gif"
+                                   :alt "Testimonies"}]
+                     [:p [:a {:href "/testimonies"}
+                          "Back to Testimony Links"]]
+                     [:dl
+                      [:dt title]
+                      [:dd (md->html body)]]
+                     [:p [:a {:href "/testimonies"}
+                          "Back to Testimony Links"]]]]))})))
 
 (def contact-us
   (site-template
@@ -345,6 +348,14 @@
                     :content (admin-template "Devotions Admin | Edit")}
                    {:path "admin/devotions/delete"
                     :content (admin-template "Devotions Admin | Delete")}
+                   {:path "admin/testimonies"
+                    :content (admin-template "Testimonies Admin")}
+                   {:path "admin/testimonies/add"
+                    :content (admin-template "Testimonies Admin | Add")}
+                   {:path "admin/testimonies/edit"
+                    :content (admin-template "Testimonies Admin | Edit")}
+                   {:path "admin/testimonies/delete"
+                    :content (admin-template "Testimonies Admin | Delete")}
                    {:path "admin/scripture"
                     :content (admin-template "Scripture Admin")}
                    {:path "admin/testimonies"
@@ -543,6 +554,107 @@
            admin-footer))
         admin-error))))
 
+;; Testimonies
+
+(defn admin-testimony-li
+  [testimony]
+  (let [title (gs/htmlEscape (:testimony/title testimony))]
+    [:li [:a {:href (str "/admin/testimonies/edit?slug="
+                         (:testimony/slug testimony))}
+          title]]))
+
+(defn admin-testimonies
+  [pages]
+  (go
+    (let [{:keys [db]} pages
+          conn (<! (:conn-ch db))
+          testimonies (->> (d/q '[:find [(pull ?e [*]) ...]
+                                  :where [?e :testimony/title]] @conn)
+                           (sort-by :testimony/title))]
+      (html
+       [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]
+       [:ul (map admin-testimony-li testimonies)]
+       [:p [:a {:href "/admin/testimonies/add"} "Add a new Testimony"]]
+       [:h4 "Administration Links"]
+       admin-footer))))
+
+(defn admin-testimonies-template
+  ([pages]
+   (admin-testimonies-template pages {}))
+  ([pages testimony]
+   (let [{:keys [lambda-base]} pages
+         title (gs/htmlEscape (:testimony/title testimony))
+         body (gs/htmlEscape (:testimony/body testimony))]
+     (html
+      [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]
+      [:p#error]
+      [:h2#success]
+      [:form {:action (str lambda-base "edit-page") :method "post"}
+       [:dl
+        [:dt [:label {:for "title"} "Title"]]
+        [:dd [:input {:type "text" :name "title" :value title}]]
+        [:dt [:label {:for "body"} "Testimony"]]
+        [:dd [:textarea {:name "body" :rows "24" :cols "80"} body]]
+        [:dt "&nbsp;"]
+        [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+      (when-not (empty? testimony)
+        [:p
+         [:a {:href (str "/admin/testimonies/delete?slug="
+                         (:testimony/slug testimony))}
+          "Delete this testimony"]])
+      [:h4 "Administration Links"]
+      admin-footer))))
+
+(defn admin-testimonies-add
+  [pages]
+  (admin-testimonies-template pages))
+
+(defn testimony-by-slug
+  [db slug]
+  (try
+    (d/q '[:find (pull ?t-id [*]) .
+           :in $ ?t-id]
+         db
+         [:testimony/slug slug])
+    (catch js/Error e
+      nil)))
+
+(defn admin-testimonies-edit
+  [pages query]
+  (go
+    (let [{:keys [db]} pages
+          slug (get-query-param query "slug")
+          conn (<! (:conn-ch db))
+          testimony (testimony-by-slug @conn slug)]
+      (if (and slug testimony)
+        (admin-testimonies-template pages testimony)
+        admin-error))))
+
+(defn admin-testimonies-delete
+  [pages query]
+  (go
+    (let [{:keys [db lambda-base]} pages
+          slug (get-query-param query "slug")
+          conn (<! (:conn-ch db))
+          testimony (testimony-by-slug @conn slug)]
+      (if (and slug testimony)
+        (let [title (gs/htmlEscape (:testimony/title testimony))]
+          (html
+           [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]
+           [:p#error]
+           [:h2#success]
+           [:h2 (str "Do you want to delete \"" title "\"?")]
+           [:dl
+            [:dd.delForm [:form {:action (str lambda-base "delete-page")
+                                 :method "post"}
+                          [:input {:type "submit" :name "yes" :value "Yes"}]]]
+            [:dd.delForm [:form {:action "/admin/testimonies"
+                                 :method "get"}
+                          [:input {:type "submit" :name "no" :value "No"}]]]]
+           [:h4 "Administration Links"]
+           admin-footer))
+        admin-error))))
+
 ;; Editing functions
 
 (defn page-info->put-ch
@@ -574,6 +686,11 @@
       (if error
         error
         success-msg))))
+
+(defn delete-page
+  [pages path]
+  (let [{:keys [s3-conn html-bucket]} pages]
+    (s3/delete-obj!-ch s3-conn html-bucket path)))
 
 (defn edit-basic
   [ident gen-fn]
@@ -690,3 +807,70 @@
              [featured-devotion
               archived-devotions]
              "The devotion was successfully deleted"))))))
+
+(defn add-testimony
+  [pages event]
+  (go
+    (let [{:keys [db]} pages
+          {:keys [title body]} event
+          conn (<! (:conn-ch db))
+          slug (str/slugify title)
+          entity {:testimony/title title
+                  :testimony/slug slug
+                  :testimony/body body}
+          [err] (<! (db/transact!-ch
+                     db
+                     [(assoc entity :db/id -1)]))]
+      (if err
+        (js/Error. err)
+        (<! (generate-pages
+             pages
+             [testimonies
+              (testimony entity)]
+             "The testimony was successfully added"))))))
+
+(defn edit-testimony
+  [pages event]
+  (go
+    (let [{:keys [db]} pages
+          {:keys [query title body]} event
+          old-slug (get-query-param query "slug")
+          slug (str/slugify title)
+          entity {:testimony/title title
+                  :testimony/slug slug
+                  :testimony/body body}
+          [err] (if old-slug
+                  (<! (db/transact!-ch
+                       db
+                       [(assoc entity :db/id [:testimony/slug old-slug])]))
+                  ["Invalid slug"])]
+      (if err
+        (js/Error. err)
+        (let [[del-err] (<! (delete-page pages (str "testimonies/" old-slug)))]
+          (if del-err
+            (js/Error. del-err)
+            (<! (generate-pages
+                 pages
+                 [testimonies
+                  (testimony entity)]
+                 "The testimony was successfully edited"))))))))
+
+(defn delete-testimony
+  [pages event]
+  (go
+    (let [{:keys [db]} pages
+          {:keys [path query]} event
+          slug (get-query-param query "slug")
+          conn (<! (:conn-ch db))
+          [err] (<! (db/transact!-ch
+                     db
+                     [[:db.fn/retractEntity [:testimony/slug slug]]]))]
+      (if err
+        (js/Error. err)
+        (let [[del-err] (<! (delete-page pages (str "testimonies/" slug)))]
+          (if del-err
+            (js/Error. del-err)
+            (<! (generate-pages
+                 pages
+                 [testimonies]
+                 "The testimony was successfully deleted"))))))))
