@@ -107,8 +107,11 @@
   (transact!-ch [this tx-data]
     (go
       (let [conn (<! conn-ch)]
-        (d/transact! conn tx-data)
-        (<! (persist!-ch this))))))
+        (try
+          (do (d/transact! conn tx-data)
+              (<! (persist!-ch this)))
+          (catch js/Error e
+            [(.-message e) nil]))))))
 
 (defn datascript-db
   [bucket key-name]
