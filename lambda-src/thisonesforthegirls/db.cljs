@@ -19,10 +19,6 @@
 
    ;; Page attributes
    :page/text {}
-   :page/sections {:db/cardinality :db.cardinality/many}
-   :page/resources {:db/cardinality :db.cardinality/many}
-   :page/scriptures {:db/cardinality :db.cardinality/many}
-   :page/testimonies {:db/cardinality :db.cardinality/many}
 
    :devotion/author {}
    :devotion/title {}
@@ -45,7 +41,7 @@
 
    :testimony/title {}
    :testimony/slug {:db/unique :db.unique/identity}
-   :testimony/text {}})
+   :testimony/body {}})
 
 (def my-write-handlers (assoc dt/write-handlers Iter (transit/ListHandler.)))
 
