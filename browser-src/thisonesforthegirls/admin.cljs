@@ -53,9 +53,9 @@
   []
   (let [body (aget (dom/getElementsByTagNameAndClass "body") 0)]
     (letfn [(cb [e]
-              (let [form (aget (dom/getElementsByTagNameAndClass "form") 0)
+              (let [form (.-target e)
                     method (.getAttribute form "method")]
-                (when (= method "POST")
+                (when (= method "post")
                   (.preventDefault e)
                   (let [action (.getAttribute form "action")
                         form-data (f/getFormDataMap form)
