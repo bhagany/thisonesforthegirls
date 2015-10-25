@@ -118,15 +118,15 @@
 
 (defn scripture-category
   [category]
-  {:s3-key (str "/scripture/" (:scripture-category/slug category))
-   :body (site-template
-          (str "Scripture | " (:scripture-category/name category))
-          [[:div#scripture
-            [:img.header {:src "/assets/scripture.gif"
-                          :alt "Scripture"}]
-            [:dl (mapcat scripture-markup
-                         (:scripture/_category category))]
-            [:p [:a {:href "/scripture"} "Back to Categories"]]]])})
+  {:path (str "/scripture/" (:scripture-category/slug category))
+   :content (site-template
+             (str "Scripture | " (:scripture-category/name category))
+             [[:div#scripture
+               [:img.header {:src "/assets/scripture.gif"
+                             :alt "Scripture"}]
+               [:dl (mapcat scripture-markup
+                            (:scripture/_category category))]
+               [:p [:a {:href "/scripture"} "Back to Categories"]]]])})
 
 (defn testimony-list-item
   [testimony]
