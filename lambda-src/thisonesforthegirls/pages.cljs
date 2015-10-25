@@ -9,7 +9,8 @@
             [markdown.core :refer [md->html]]
             [thisonesforthegirls.db :as db]
             [thisonesforthegirls.s3 :as s3])
-  (:import [goog.date Date])
+  (:import [goog.date Date]
+           [goog Uri])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [hiccups.core :as hiccups :refer [html]]))
 
@@ -340,6 +341,10 @@
                     :content (admin-template "Devotions Admin")}
                    {:path "admin/devotions/add"
                     :content (admin-template "Devotions Admin | Add")}
+                   {:path "admin/devotions/edit"
+                    :content (admin-template "Devotions Admin | Edit")}
+                   {:path "admin/devotions/delete"
+                    :content (admin-template "Devotions Admin | Delete")}
                    {:path "admin/scripture"
                     :content (admin-template "Scripture Admin")}
                    {:path "admin/testimonies"
@@ -385,6 +390,10 @@
    [:li [:span.sep "|"] [:a {:href "/admin/logout"} " Log out "]]])
 
 (def admin-error (html error-fragment))
+
+(defn get-query-param
+  [query key]
+  (.get (.getQueryData (goog.Uri. query)) key))
 
 (defn admin
   [pages]
@@ -433,7 +442,7 @@
 (defn admin-devotion-li
   [devotion]
   (let [title (gs/htmlEscape (:devotion/title devotion))]
-    [:li [:a {:href (str "/admin/devotions/edit/" (:devotion/slug devotion))}
+    [:li [:a {:href (str "/admin/devotions/edit?slug=" (:devotion/slug devotion))}
           title]]))
 
 (defn admin-devotions
@@ -475,7 +484,7 @@
         [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
       (when-not (empty? devotion)
         [:p
-         [:a {:href (str "/admin/devotions/delete/"
+         [:a {:href (str "/admin/devotions/delete?slug="
                          (:devotion/slug devotion))}
           "Delete this devotion"]])
       [:h4 "Administration Links"]
@@ -486,31 +495,36 @@
   (admin-devotions-template pages))
 
 (defn admin-devotions-edit
-  [pages path]
+  [pages query]
   (go
     (let [{:keys [db]} pages
-          slug (s/replace path "/admin/devotions/edit/" "")
+          slug (get-query-param query "slug")
           conn (<! (:conn-ch db))
-          devotion (d/q '[:find (pull ?dev-id [*]) .
-                          :in $ ?dev-id]
-                        @conn
-                        [:devotion/slug slug])]
-      (if (empty? devotion)
-        admin-error
-        (admin-devotions-template pages devotion)))))
+          devotion (try
+                     (d/q '[:find (pull ?dev-id [*]) .
+                            :in $ ?dev-id]
+                          @conn
+                          [:devotion/slug slug])
+                     (catch js/Error e
+                       nil))]
+      (if (and slug devotion)
+        (admin-devotions-template pages devotion)
+        admin-error))))
 
 (defn admin-devotions-delete
-  [pages path]
+  [pages query]
   (go
     (let [{:keys [db lambda-base]} pages
-          slug (s/replace path "/admin/devotions/delete/" "")
+          slug (get-query-param query "slug")
           conn (<! (:conn-ch db))
-          devotion (d/q '[:find (pull ?dev-id [*]) .
-                          :in $ ?dev-id]
-                        @conn
-                        [:devotion/slug slug])]
-      (if (empty? devotion)
-        admin-error
+          devotion (try
+                     (d/q '[:find (pull ?dev-id [*]) .
+                            :in $ ?dev-id]
+                          @conn
+                          [:devotion/slug slug])
+                     (catch js/Error e
+                       nil))]
+      (if (and slug devotion)
         (let [title (gs/htmlEscape (:devotion/title devotion))]
           (html
            [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
@@ -520,19 +534,13 @@
            [:dl
             [:dd.delForm [:form {:action (str lambda-base "delete-page")
                                  :method "post"}
-                  [:input {:type "submit" :name "yes" :value "Yes"}]]]
+                          [:input {:type "submit" :name "yes" :value "Yes"}]]]
             [:dd.delForm [:form {:action "/admin/devotions"
                                  :method "get"}
-                  [:input {:type "submit" :name "no" :value "No"}]]]]
+                          [:input {:type "submit" :name "no" :value "No"}]]]]
            [:h4 "Administration Links"]
-           admin-footer))))))
-
-(defn dynamic-admin-page
-  [title path]
-  (fn [_]
-    (go
-      {:path path
-       :content (admin-template title)})))
+           admin-footer))
+        admin-error))))
 
 ;; Editing functions
 
@@ -616,39 +624,68 @@
         (<! (generate-pages
              pages
              [featured-devotion
-              archived-devotions
-              (dynamic-admin-page
-               (str "Devotions Admin | Edit \"" title "\"")
-               (str "admin/devotions/edit/" slug))
-              (dynamic-admin-page
-               (str "Devotions Admin | Delete \"" title "\"")
-               (str "admin/devotions/delete/" slug))]
+              archived-devotions]
              "The devotion was successfully added"))))))
 
 (defn edit-devotion
   [pages event]
   (go
     (let [{:keys [db]} pages
-          {:keys [path title author devotion]} event
-          old-slug (s/replace path "/admin/devotions/edit/" "")
+          {:keys [query title author devotion]} event
+          old-slug (get-query-param query "slug")
           slug (str/slugify title)
-          [err] (<! (db/transact!-ch
-                     db
-                     [{:db/id [:devotion/slug old-slug]
-                       :devotion/author author
-                       :devotion/title title
-                       :devotion/slug slug
-                       :devotion/body devotion}]))]
+          [err] (if old-slug
+                  (<! (db/transact!-ch
+                       db
+                       [{:db/id [:devotion/slug old-slug]
+                         :devotion/author author
+                         :devotion/title title
+                         :devotion/slug slug
+                         :devotion/body devotion}]))
+                  ["Invalid slug"])]
       (if err
         (js/Error. err)
         (<! (generate-pages
              pages
              [featured-devotion
-              archived-devotions
-              (dynamic-admin-page
-               (str "Devotions Admin | Edit \"" title "\"")
-               (str "admin/devotions/edit/" slug))
-              (dynamic-admin-page
-               (str "Devotions Admin | Delete \"" title "\"")
-               (str "admin/devotions/delete/" slug))]
+              archived-devotions]
              "The devotion was successfully edited"))))))
+
+(defn delete-devotion
+  [pages event]
+  (go
+    (let [{:keys [db]} pages
+          {:keys [path]} event
+          slug (get-query-param path "slug")
+          conn (<! (:conn-ch db))
+          featured? (d/q '[:find ?featured .
+                           :in $ ?e
+                           :where
+                           [?e :devotion/featured? ?featured]]
+                         @conn
+                         [:devotion/slug slug])
+          tx (or
+              (when featured?
+                (let [d (->>
+                         (d/q
+                          '[:find [(pull ?e [:db/id :devotion/created-at]) ...]
+                            :where
+                            [?e :devotion/featured? false]]
+                          @conn)
+                         (sort-by :devotion/created-at #(compare %2 %1))
+                         first)]
+                  (when d
+                    [{:db/id (:db/id d)
+                      :devotion/featured? true}])))
+              [])
+          [err] (<! (db/transact!-ch
+                     db
+                     (into tx [[:db.fn/retractEntity
+                                [:devotion/slug slug]]])))]
+      (if err
+        (js/Error. err)
+        (<! (generate-pages
+             pages
+             [featured-devotion
+              archived-devotions]
+             "The devotion was successfully deleted"))))))

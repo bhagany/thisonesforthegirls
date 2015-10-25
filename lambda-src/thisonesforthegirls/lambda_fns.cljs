@@ -128,7 +128,7 @@
             :else (js/Error. "Wrong username or password")))))))
 
 (defn admin-page-router
-  [pages path]
+  [pages path query]
   (go
     (cond
       (= path "/admin") (p/admin pages)
@@ -137,20 +137,20 @@
       (= path "/admin/community-resources") (<! (p/admin-resources pages))
       (= path "/admin/devotions") (<! (p/admin-devotions pages))
       (= path "/admin/devotions/add") (p/admin-devotions-add pages)
-      (s/starts-with? path "/admin/devotions/edit/") (<! (p/admin-devotions-edit pages path))
-      (s/starts-with? path "/admin/devotions/delete/") (<! (p/admin-devotions-delete pages path))
+      (s/starts-with? path "/admin/devotions/edit") (<! (p/admin-devotions-edit pages query))
+      (s/starts-with? path "/admin/devotions/delete") (<! (p/admin-devotions-delete pages query))
       :else p/admin-error)))
 
 (defn admin-page
   [lambda-fns]
   (fn [event context]
     (go
-      (let [{:keys [path jwt]} event
+      (let [{:keys [path query jwt]} event
             {:keys [pages db]} lambda-fns
             conn (<! (:conn-ch db))]
         ;; check token, return login form if bad
         (if (check-login-token @conn jwt)
-          (<! (admin-page-router pages path))
+          (<! (admin-page-router pages path query))
           (p/login-form pages))))))
 
 (defn edit-page
@@ -167,6 +167,20 @@
                   (= path "/admin/about") p/edit-about-us
                   (= path "/admin/community-resources") p/edit-resources
                   (= path "/admin/devotions/add") p/add-devotion
-                  (s/starts-with? path "/admin/devotions/edit/") p/edit-devotion)]
+                  (s/starts-with? path "/admin/devotions/edit") p/edit-devotion)]
             (<! (edit-fn pages event)))
+          (js/Error "Please log in"))))))
+
+(defn delete-page
+  [lambda-fns]
+  (fn [event context]
+    (go
+      (let [{:keys [path jwt]} event
+            {:keys [pages db]} lambda-fns
+            conn (<! (:conn-ch db))]
+        (if (check-login-token @conn jwt)
+          (let [delete-fn
+                (cond
+                  (s/starts-with? path "/admin/devotions/delete") p/delete-devotion)]
+            (<! (delete-fn pages event)))
           (js/Error "Please log in"))))))

@@ -14,8 +14,10 @@
 (defn main
   [page-url]
   (let [loc (.. js/window -location -href)
+        uri (goog.Uri.parse loc)
         xhr-json (.stringify js/JSON
-                             #js {:path (.getPath (goog.Uri.parse loc))})
+                             #js {:path (.getPath uri)
+                                  :query (str "?" (.getQuery uri))})
         jwt (cookies/get "jwt")
         headers (if jwt
                   #js {:x-jwt jwt}
