@@ -11,13 +11,16 @@
 ;; This must be set in your build
 (goog-define admin-page-url "http://your.api.com")
 
+(defn path-and-query
+  []
+  (let [loc (.. js/window -location -href)
+        uri (goog.Uri.parse loc)]
+    {:path (.getPath uri)
+     :query (str "?" (.getQuery uri))}))
+
 (defn main
   [page-url]
-  (let [loc (.. js/window -location -href)
-        uri (goog.Uri.parse loc)
-        xhr-json (.stringify js/JSON
-                             #js {:path (.getPath uri)
-                                  :query (str "?" (.getQuery uri))})
+  (let [xhr-json (.stringify js/JSON (clj->js (path-and-query)))
         jwt (cookies/get "jwt")
         headers (if jwt
                   #js {:x-jwt jwt}
@@ -61,8 +64,6 @@
                   (.preventDefault e)
                   (let [action (.getAttribute form "action")
                         form-data (f/getFormDataMap form)
-                        loc (.. js/window -location -href)
-                        path (.getPath (goog.Uri.parse loc))
                         jwt (cookies/get "jwt")
                         headers (if jwt
                                   #js {:x-jwt jwt}
@@ -70,7 +71,7 @@
                         xhr-json (->> (goog.object/get form-data "map_")
                                       js->clj
                                       (map (fn [[k v]] [k (v 0)]))
-                                      (into {:path path})
+                                      (into (path-and-query))
                                       clj->js
                                       (.stringify js/JSON))]
                     (goog.net.XhrIo.send action
