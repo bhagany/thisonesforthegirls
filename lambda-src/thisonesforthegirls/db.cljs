@@ -33,11 +33,12 @@
    :section/name {}
 
    :scripture-category/name {}
-   :scripture-category/slug {}
+   :scripture-category/slug {:db/unique :db.unique/identity}
 
    :scripture/category {:db/valueType :db.type/ref}
    :scripture/text {}
    :scripture/reference {}
+   :scripture/slug {:db/unique :db.unique/identity}
 
    :testimony/title {}
    :testimony/slug {:db/unique :db.unique/identity}
