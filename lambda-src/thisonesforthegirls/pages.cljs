@@ -497,19 +497,23 @@
   [pages]
   (admin-devotions-template pages))
 
+(defn devotion-by-slug
+  [db slug]
+  (try
+    (d/q '[:find (pull ?dev-id [*]) .
+           :in $ ?dev-id]
+         db
+         [:devotion/slug slug])
+    (catch js/Error e
+      nil)))
+
 (defn admin-devotions-edit
   [pages query]
   (go
     (let [{:keys [db]} pages
           slug (get-query-param query "slug")
           conn (<! (:conn-ch db))
-          devotion (try
-                     (d/q '[:find (pull ?dev-id [*]) .
-                            :in $ ?dev-id]
-                          @conn
-                          [:devotion/slug slug])
-                     (catch js/Error e
-                       nil))]
+          devotion (devotion-by-slug @conn slug)]
       (if (and slug devotion)
         (admin-devotions-template pages devotion)
         admin-error))))
@@ -520,13 +524,7 @@
     (let [{:keys [db lambda-base]} pages
           slug (get-query-param query "slug")
           conn (<! (:conn-ch db))
-          devotion (try
-                     (d/q '[:find (pull ?dev-id [*]) .
-                            :in $ ?dev-id]
-                          @conn
-                          [:devotion/slug slug])
-                     (catch js/Error e
-                       nil))]
+          devotion (devotion-by-slug @conn slug)]
       (if (and slug devotion)
         (let [title (gs/htmlEscape (:devotion/title devotion))]
           (html
@@ -658,8 +656,8 @@
   [pages event]
   (go
     (let [{:keys [db]} pages
-          {:keys [path]} event
-          slug (get-query-param path "slug")
+          {:keys [path query]} event
+          slug (get-query-param query "slug")
           conn (<! (:conn-ch db))
           featured? (d/q '[:find ?featured .
                            :in $ ?e
