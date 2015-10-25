@@ -255,7 +255,8 @@
                    [[:div#devotions
                      [:img.header {:src "/assets/devotions.gif"
                                    :alt "Devotions"}]
-                     (into [:dl] (devotion-markup devotion))
+                     (when devotion
+                       (into [:dl] (devotion-markup devotion)))
                      [:p [:a {:href "/devotions/archive"} "Read more"]]]])]
       {:path "devotions" :content content})))
 
