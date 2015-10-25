@@ -143,6 +143,10 @@
       (= path "/admin/testimonies/add") (p/admin-testimonies-add pages)
       (s/starts-with? path "/admin/testimonies/edit") (<! (p/admin-testimonies-edit pages query))
       (s/starts-with? path "/admin/testimonies/delete") (<! (p/admin-testimonies-delete pages query))
+      (= path "/admin/scripture/categories") (<! (p/admin-scripture-categories pages))
+      (= path "/admin/scripture/categories/add") (<! (p/admin-scripture-categories-add pages))
+      (s/starts-with? path "/admin/scripture/categories/edit") (<! (p/admin-scripture-categories-edit pages query))
+      (s/starts-with? path "/admin/scripture/categories/delete") (<! (p/admin-scripture-categories-delete pages query))
       :else p/admin-error)))
 
 (defn admin-page
@@ -173,7 +177,9 @@
                   (= path "/admin/devotions/add") p/add-devotion
                   (s/starts-with? path "/admin/devotions/edit") p/edit-devotion
                   (= path "/admin/testimonies/add") p/add-testimony
-                  (s/starts-with? path "/admin/testimonies/edit") p/edit-testimony)]
+                  (s/starts-with? path "/admin/testimonies/edit") p/edit-testimony
+                  (= path "/admin/scripture/categories/add") p/add-scripture-category
+                  (s/starts-with? path "/admin/scripture/categories/edit") p/edit-scripture-category)]
             (<! (edit-fn pages event)))
           (js/Error "Please log in"))))))
 
@@ -188,6 +194,7 @@
           (let [delete-fn
                 (cond
                   (s/starts-with? path "/admin/devotions/delete") p/delete-devotion
-                  (s/starts-with? path "/admin/testimonies/delete") p/delete-testimony)]
+                  (s/starts-with? path "/admin/testimonies/delete") p/delete-testimony
+                  (s/starts-with? path "/admin/scripture/categories/delete") p/delete-scripture-category)]
             (<! (delete-fn pages event)))
           (js/Error "Please log in"))))))

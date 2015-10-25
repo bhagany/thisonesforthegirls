@@ -105,8 +105,9 @@
 
 (defn scripture-category-list-item
   [category]
-  (let [slug (gs/htmlEscape (:scripture-category/slug category))]
-    [:li [:a {:href (str "/scripture/" slug)}]]))
+  (let [name (gs/htmlEscape (:scripture-category/name category))]
+    [:li [:a {:href (str "/scripture/" (:scripture-category/slug category))}
+          name]]))
 
 (defn scripture-markup
   [scripture]
@@ -117,16 +118,19 @@
      [:dd text]]))
 
 (defn scripture-category
-  [category]
-  {:path (str "/scripture/" (:scripture-category/slug category))
-   :content (site-template
-             (str "Scripture | " (:scripture-category/name category))
-             [[:div#scripture
-               [:img.header {:src "/assets/scripture.gif"
-                             :alt "Scripture"}]
-               [:dl (mapcat scripture-markup
-                            (:scripture/_category category))]
-               [:p [:a {:href "/scripture"} "Back to Categories"]]]])})
+  [entity]
+  (fn [_]
+    (go
+      {:path (str "scripture/" (:scripture-category/slug entity))
+       :content (site-template
+                 (str "Scripture | " (:scripture-category/name entity))
+                 [[:div#scripture
+                   [:img.header {:src "/assets/scripture.gif"
+                                 :alt "Scripture"}]
+                   (when-not (empty? (:scripture/_category entity))
+                     [:dl (mapcat scripture-markup
+                                  (:scripture/_category entity))])
+                   [:p [:a {:href "/scripture"} "Back to Categories"]]]])})))
 
 (defn testimony-list-item
   [testimony]
@@ -356,6 +360,14 @@
                     :content (admin-template "Testimonies Admin | Edit")}
                    {:path "admin/testimonies/delete"
                     :content (admin-template "Testimonies Admin | Delete")}
+                   {:path "admin/scripture/categories"
+                    :content (admin-template "Scripture Admin")}
+                   {:path "admin/scripture/categories/add"
+                    :content (admin-template "Scripture Admin | Add Category")}
+                   {:path "admin/scripture/categories/edit"
+                    :content (admin-template "Scripture Admin | Edit Category")}
+                   {:path "admin/scripture/categories/delete"
+                    :content (admin-template "Scripture Admin | Delete Category")}
                    {:path "admin/scripture"
                     :content (admin-template "Scripture Admin")}
                    {:path "admin/testimonies"
@@ -393,7 +405,7 @@
    [:li [:span.sep "|"] [:a {:href "/admin/welcome"} " Welcome "]]
    [:li [:span.sep "|"] [:a {:href "/admin/about"} " About Us "]]
    [:li [:span.sep "|"] [:a {:href "/admin/devotions"} " Devotions "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/scripture"} " Scripture "]]
+   [:li [:span.sep "|"] [:a {:href "/admin/scripture/categories"} " Scripture "]]
    [:li [:span.sep "|"] [:a {:href "/admin/testimonies"} " Testimonies "]]
    [:li [:span.sep "|"] [:a {:href "/admin/community-resources"}
                          " Community Resources "]]
@@ -655,6 +667,128 @@
            admin-footer))
         admin-error))))
 
+;; Scripture categories
+
+(defn admin-scripture-category-li
+  [category]
+  (let [name (gs/htmlEscape (:scripture-category/name category))]
+    [:li [:a {:href (str "/admin/scripture/categories/edit?slug="
+                         (:scripture-category/slug category))}
+          name]]))
+
+(defn admin-scripture-categories
+  [pages]
+  (go
+    (let [{:keys [db]} pages
+          conn (<! (:conn-ch db))
+          categories (->> (d/q '[:find [(pull ?e [*]) ...]
+                                 :where [?e :scripture-category/name]] @conn)
+                          (sort-by :scripture-category/name))]
+      (html
+       [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
+       [:ul (map admin-scripture-category-li categories)]
+       [:p [:a {:href "/admin/scripture/categories/add"}
+            "Add a new Scripture Category"]]
+       [:h4 "Administration Links"]
+       admin-footer))))
+
+(defn admin-scripture-li
+  [scripture]
+  (let [ref (gs/htmlEscape (:scripture/reference scripture))]
+    [:li [:a {:href (str "/admin/scripture/edit?slug="
+                         (:scripture/slug scripture))}
+          ref]]))
+
+(defn admin-scripture-categories-template
+  ([pages]
+   (admin-scripture-categories-template pages {}))
+  ([pages category]
+   (go
+     (let [{:keys [lambda-base]} pages
+           name (gs/htmlEscape (:scripture-category/name category))]
+       (html
+        [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
+        [:p#error]
+        [:h2#success]
+        [:form {:action (str lambda-base "edit-page") :method "post"}
+         [:dl
+          [:dt [:label {:for "name"} "Category Name"]]
+          [:dd [:input {:type "text" :name "name" :value name}]]
+          [:dt "&nbsp;"]
+          [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+        (when-not (empty? category)
+          [:div
+           [:p
+            [:a {:href (str "/admin/scripture/categories/delete?slug="
+                            (:scripture-category/slug category))}
+             "Delete this Category"]]
+           (let [{:keys [db]} pages
+                 conn (<! (:conn-ch db))
+                 scriptures (d/q '[:find [(pull ?e [*]) ...]
+                                   :in $ ?cat-id
+                                   :where [?e :scripture/category ?cat-id]]
+                                 @conn
+                                 (:db/id category))]
+             (when-not (empty? scriptures)
+               [:h3 "Edit the following scriptures"]
+               [:ul (map admin-scripture-li scriptures)]))
+           [:p [:a {:href (str "/admin/scripture/add?category="
+                               (:scripture-category/slug category))}
+                "Add a new Scripture"]]])
+        [:h4 "Administration Links"]
+        admin-footer)))))
+
+(defn admin-scripture-categories-add
+  [pages]
+  (go
+    (<! (admin-scripture-categories-template pages))))
+
+(defn scripture-category-by-slug
+  [db slug]
+  (try
+    (d/q '[:find (pull ?cat-id [*]) .
+           :in $ ?cat-id]
+         db
+         [:scripture-category/slug slug])
+    (catch js/Error e
+      nil)))
+
+(defn admin-scripture-categories-edit
+  [pages query]
+  (go
+    (let [{:keys [db]} pages
+          slug (get-query-param query "slug")
+          conn (<! (:conn-ch db))
+          category (scripture-category-by-slug @conn slug)]
+      (if (and slug category)
+        (<! (admin-scripture-categories-template pages category))
+        admin-error))))
+
+(defn admin-scripture-categories-delete
+  [pages query]
+  (go
+    (let [{:keys [db lambda-base]} pages
+          slug (get-query-param query "slug")
+          conn (<! (:conn-ch db))
+          category (scripture-category-by-slug @conn slug)]
+      (if (and slug category)
+        (let [name (gs/htmlEscape (:scripture-category/name category))]
+          (html
+           [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
+           [:p#error]
+           [:h2#success]
+           [:h2 (str "Do you want to delete \"" name "\"?")]
+           [:dl
+            [:dd.delForm [:form {:action (str lambda-base "delete-page")
+                                 :method "post"}
+                          [:input {:type "submit" :name "yes" :value "Yes"}]]]
+            [:dd.delForm [:form {:action "/admin/scripture"
+                                 :method "get"}
+                          [:input {:type "submit" :name "no" :value "No"}]]]]
+           [:h4 "Administration Links"]
+           admin-footer))
+        admin-error))))
+
 ;; Editing functions
 
 (defn page-info->put-ch
@@ -874,3 +1008,70 @@
                  pages
                  [testimonies]
                  "The testimony was successfully deleted"))))))))
+
+;; Scripture Categories
+
+(defn add-scripture-category
+  [pages event]
+  (go
+    (let [{:keys [db]} pages
+          {:keys [name]} event
+          conn (<! (:conn-ch db))
+          slug (str/slugify name)
+          entity {:scripture-category/name name
+                  :scripture-category/slug slug}
+          [err] (<! (db/transact!-ch
+                     db
+                     [(assoc entity :db/id -1)]))]
+      (if err
+        (js/Error. err)
+        (<! (generate-pages
+             pages
+             [scripture-categories
+              (scripture-category entity)]
+             "The scripture category was successfully added"))))))
+
+(defn edit-scripture-category
+  [pages event]
+  (go
+    (let [{:keys [db]} pages
+          {:keys [query name]} event
+          old-slug (get-query-param query "slug")
+          slug (str/slugify name)
+          entity {:scripture-category/name name
+                  :scripture-category/slug slug}
+          [err] (if old-slug
+                  (<! (db/transact!-ch
+                       db
+                       [(assoc entity :db/id [:scripture-category/slug old-slug])]))
+                  ["Invalid slug"])]
+      (if err
+        (js/Error. err)
+        (let [[del-err] (<! (delete-page pages (str "scripture/" old-slug)))]
+          (if del-err
+            (js/Error. del-err)
+            (<! (generate-pages
+                 pages
+                 [scripture-categories
+                  (scripture-category entity)]
+                 "The scripture category was successfully edited"))))))))
+
+(defn delete-scripture-category
+  [pages event]
+  (go
+    (let [{:keys [db]} pages
+          {:keys [query]} event
+          slug (get-query-param query "slug")
+          conn (<! (:conn-ch db))
+          [err] (<! (db/transact!-ch
+                     db
+                     [[:db.fn/retractEntity [:scripture-category/slug slug]]]))]
+      (if err
+        (js/Error. err)
+        (let [[del-err] (<! (delete-page pages (str "scripture/" slug)))]
+          (if del-err
+            (js/Error. del-err)
+            (<! (generate-pages
+                 pages
+                 [scripture-categories]
+                 "The scripture category was successfully deleted"))))))))
