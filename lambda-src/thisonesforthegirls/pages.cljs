@@ -439,10 +439,13 @@
                                    :alt "Community Resources"}
                                   "Community Resources Text"))
 
+;; Devotions
+
 (defn admin-devotion-li
   [devotion]
   (let [title (gs/htmlEscape (:devotion/title devotion))]
-    [:li [:a {:href (str "/admin/devotions/edit?slug=" (:devotion/slug devotion))}
+    [:li [:a {:href (str "/admin/devotions/edit?slug="
+                         (:devotion/slug devotion))}
           title]]))
 
 (defn admin-devotions
