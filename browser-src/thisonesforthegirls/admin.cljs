@@ -84,5 +84,5 @@
 (defonce get-page
   (main admin-page-url))
 
-(defonce submit-listner
+(defonce submit-listener
   (form-submitter))
