@@ -1029,23 +1029,29 @@
           {:keys [query name]} event
           old-slug (get-query-param query "slug")
           slug (str/slugify name)
-          entity {:scripture-category/name name
-                  :scripture-category/slug slug}
-          [err] (if old-slug
-                  (<! (db/transact!-ch
-                       db
-                       [(assoc entity :db/id [:scripture-category/slug old-slug])]))
-                  ["Invalid slug"])]
+          [err tx-info] (if old-slug
+                          (<! (db/transact!-ch
+                               db
+                               [{:db/id [:scripture-category/slug old-slug]
+                                 :scripture-category/name name
+                                 :scripture-category/slug slug}]))
+                          ["Invalid slug"])]
       (if err
         (js/Error. err)
         (let [[del-err] (<! (delete-page pages (str "scripture/" old-slug)))]
           (if del-err
             (js/Error. del-err)
-            (<! (generate-pages
-                 pages
-                 [scripture-categories
-                  (scripture-category entity)]
-                 "The scripture category was successfully edited"))))))))
+            (let [entity (d/q '[:find (pull
+                                       ?e
+                                       [* {:scripture/_category [*]}]) .
+                                :in $ ?e]
+                              (:db-after tx-info)
+                              [:scripture-category/slug slug])]
+              (<! (generate-pages
+                   pages
+                   [scripture-categories
+                    (scripture-category entity)]
+                   "The scripture category was successfully edited")))))))))
 
 (defn delete-scripture-category
   [pages event]
