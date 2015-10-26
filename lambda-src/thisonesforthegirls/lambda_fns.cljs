@@ -124,7 +124,12 @@
                               "")]
           (cond
             (some nil? [username password]) (js/Error. "Creds missing")
-            (.compareSync bcrypt password stored-hash) (make-login-token @conn)
+            (.compareSync bcrypt
+                          password
+                          stored-hash) (.stringify
+                                        js/JSON
+                                        (clj->js
+                                         {:jwt (make-login-token @conn)}))
             :else (js/Error. "Wrong username or password")))))))
 
 (defn admin-page-router

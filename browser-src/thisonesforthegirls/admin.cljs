@@ -18,6 +18,13 @@
     {:path (.getPath uri)
      :query (str "?" (.getQuery uri))}))
 
+(defn show-success
+  [message]
+  (let [success (.getElementById js/document "success")]
+    (when success
+      (set! (.-innerHTML success) message)
+      (style/setStyle success "display" "block"))))
+
 (defn main
   [page-url]
   (let [xhr-json (.stringify js/JSON (clj->js (path-and-query)))
@@ -29,29 +36,33 @@
               (let [frag (dom/htmlToDocumentFragment
                           (.getResponseText (.-target response)))
                     node (.getElementById js/document "admin")]
-                (.appendChild node frag)))]
+                (.appendChild node frag)
+                (when-let [message (cookies/get "message")]
+                  (show-success message)
+                  (cookies/remove "message" "/admin"))))]
       (goog.net.XhrIo.send page-url cb "POST" xhr-json headers))))
 
 (defn handle-ajax-response
   [action]
   (fn
     [response]
-    (let [xhr (.-target response)]
+    (let [xhr (.-target response)
+          json (.getResponseJson xhr)]
       (if (< (.getStatus xhr) 300)
-        (let [text (.getResponseText xhr)]
-          (if (s/ends-with? action "login")
-            ;; login processing
+        (if (s/ends-with? action "login")
+          ;; login processing
+          (do
+            (cookies/set "jwt" (.-jwt json) -1 "/admin")
+            (.reload (.-location js/window)))
+          ;; other form processing
+          (if-let [redirect (.-redirect json)]
             (do
-              (cookies/set "jwt" text)
-              (.reload (.-location js/window)))
-            ;; other form processing
-            (let [success (.getElementById js/document "success")]
-              (set! (.-innerHTML success) text)
-              (style/setStyle success "display" "block"))))
+              (cookies/set "message" (.-success json) -1 "/admin")
+              (set! (.-href (.-location js/window)) redirect))
+            (show-success (.-success json))))
         ;; general error processing
-        (let [resp-json (.getResponseJson xhr)
-              error-p (.getElementById js/document "error")]
-          (set! (.-innerHTML error-p) (.-errorMessage resp-json))
+        (let [error-p (.getElementById js/document "error")]
+          (set! (.-innerHTML error-p) (.-errorMessage json))
           (style/setStyle error-p "display" "block"))))))
 
 (defn form-submitter
