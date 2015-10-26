@@ -46,14 +46,15 @@
   (delete-obj!-ch [_ bucket key-name]
     (let [ch (chan)
           fs (node/require "fs")
-          filename (str bucket "/" (s/replace key-name "/" "___"))]
+          filename (str bucket "/" (s/replace key-name "/" "___"))
+          resp (try
+                 (do
+                   (.unlinkSync fs filename "utf8")
+                   [nil "that totally worked"])
+                 (catch :default e
+                   [e nil]))]
       (go
-        (try
-          (do
-            (.unlinkSync fs filename "utf8")
-            (>! ch [nil "that totally worked"]))
-          (catch :default e
-            (>! ch [e nil])))
+        (>! ch resp)
         (close! ch))
       ch)))
 
