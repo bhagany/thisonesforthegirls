@@ -103,12 +103,15 @@
         (<! (s3/put-obj!-ch s3-conn bucket key-name body)))))
   (transact!-ch [this tx-data]
     (go
-      (let [conn (<! conn-ch)]
-        (try
-          (do (d/transact! conn tx-data)
-              (<! (persist!-ch this)))
-          (catch js/Error e
-            [(.-message e) nil]))))))
+      (try
+        (let [conn (<! conn-ch)
+              tx-info (d/transact! conn tx-data)
+              [persist-err] (<! (persist!-ch this))]
+          (if persist-err
+            [persist-err nil]
+            [nil tx-info]))
+        (catch js/Error e
+          [(.-message e) nil])))))
 
 (defn datascript-db
   [bucket key-name]
