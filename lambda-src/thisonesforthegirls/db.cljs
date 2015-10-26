@@ -30,8 +30,6 @@
    :resource/name {}
    :resource/text {}
 
-   :section/name {}
-
    :scripture-category/name {}
    :scripture-category/slug {:db/unique :db.unique/identity}
 
