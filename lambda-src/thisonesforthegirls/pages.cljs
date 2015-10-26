@@ -206,50 +206,41 @@
   (go
     (let [{:keys [db]} pages
           conn (<! (:conn-ch db))
-          text (->> (d/q text-query @conn [:db/ident :home])
-                    gs/htmlEscape
-                    md->html)
+          text (gs/htmlEscape (d/q text-query @conn [:db/ident :home]))
           page (site-template
                 "Welcome"
                 [[:div#welcome [:img.header {:src "/assets/welcome.gif" :alt "Welcome"}]
-                  "this text will not occur"
+                  (md->html text)
                   [:img#youare {:src "/assets/you-are.gif"
-                                :alt "You are loved..."}]]])
-          content (s/replace page "this text will not occur" text)]
-      {:path "home" :content content})))
+                                :alt "You are loved..."}]]])]
+      {:path "home" :content page})))
 
 (defn about-us
   [pages]
   (go
     (let [{:keys [db]} pages
           conn (<! (:conn-ch db))
-          text (->> (d/q text-query @conn [:db/ident :about-us])
-                    gs/htmlEscape
-                    md->html)
+          text (gs/htmlEscape (d/q text-query @conn [:db/ident :about-us]))
           page (site-template
                 "About Us"
                 [[:div#about
                   [:img.header {:src "/assets/about-us.gif" :alt "About Us"}]
-                  "this text will not occur"]])
-          content (s/replace page "this text will not occur" text)]
-      {:path "about" :content content})))
+                  (md->html text)]])]
+      {:path "about" :content page})))
 
 (defn resources
   [pages]
   (go
     (let [{:keys [db]} pages
           conn (<! (:conn-ch db))
-          text (->> (d/q text-query @conn [:db/ident :resources])
-                    gs/htmlEscape
-                    md->html)
+          text (gs/htmlEscape (d/q text-query @conn [:db/ident :resources]))
           page (site-template
                 "Community Resources"
                 [[:div#resources
                   [:img.header {:src "/assets/community-resources.gif"
                                 :alt "Community Resources"}]
-                  "this text will not occur"]])
-          content (s/replace page "this text will not occur" text)]
-      {:path "community-resources" :content content})))
+                  (md->html text)]])]
+      {:path "community-resources" :content page})))
 
 (defn featured-devotion
   [pages]
@@ -408,17 +399,19 @@
 ;; Admin page fragments
 
 (def admin-footer
-  [:ul.adminFooter
-   [:li [:a {:href "/admin"} "Admin Home "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/welcome"} " Welcome "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/about"} " About Us "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/devotions"} " Devotions "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/scripture/categories"} " Scripture "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/testimonies"} " Testimonies "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/community-resources"}
-                         " Community Resources "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/contact"} " Contact Us "]]
-   [:li [:span.sep "|"] [:a {:href "/admin/logout"} " Log out "]]])
+  [:div
+   [:h4 "Administration Links"]
+   [:ul.adminFooter
+    [:li [:a {:href "/admin"} "Admin Home "]]
+    [:li [:span.sep "|"] [:a {:href "/admin/welcome"} " Welcome "]]
+    [:li [:span.sep "|"] [:a {:href "/admin/about"} " About Us "]]
+    [:li [:span.sep "|"] [:a {:href "/admin/devotions"} " Devotions "]]
+    [:li [:span.sep "|"] [:a {:href "/admin/scripture/categories"} " Scripture "]]
+    [:li [:span.sep "|"] [:a {:href "/admin/testimonies"} " Testimonies "]]
+    [:li [:span.sep "|"] [:a {:href "/admin/community-resources"}
+                          " Community Resources "]]
+    [:li [:span.sep "|"] [:a {:href "/admin/contact"} " Contact Us "]]
+    [:li [:span.sep "|"] [:a {:href "/admin/logout"} " Log out "]]]])
 
 (def admin-error (html error-fragment))
 
@@ -434,7 +427,6 @@
     "Hello TOFTG Administrators! The links on the left will take you to the "
     "regular site. The links below will allow you to modify the regular site. "
     "Choose accordingly"]
-   [:h4 "Administration Links"]
    admin-footer))
 
 (defn admin-contact
@@ -457,7 +449,6 @@
          [:dd [:input {:type "text" :name "email" :value email}]]
          [:dt "&nbsp;"]
          [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
-       [:h4 "Administration Links"]
        admin-footer))))
 
 (defn admin-basic
@@ -477,7 +468,6 @@
            [:dd [:textarea {:name "text" :rows "24" :cols "80"} text]]
            [:dt "&nbsp;"]
            [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
-         [:h4 "Administration Links"]
          admin-footer)))))
 
 (def admin-home (admin-basic :home
@@ -514,7 +504,6 @@
        [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
        [:ul (map admin-devotion-li devotions)]
        [:p [:a {:href "/admin/devotions/add"} "Add a new Devotion"]]
-       [:h4 "Administration Links"]
        admin-footer))))
 
 (defn admin-devotions-template
@@ -544,7 +533,6 @@
          [:a {:href (str "/admin/devotions/delete?slug="
                          (:devotion/slug devotion))}
           "Delete this devotion"]])
-      [:h4 "Administration Links"]
       admin-footer))))
 
 (defn admin-devotions-add
@@ -593,7 +581,6 @@
             [:dd.delForm [:form {:action "/admin/devotions"
                                  :method "get"}
                           [:input {:type "submit" :name "no" :value "No"}]]]]
-           [:h4 "Administration Links"]
            admin-footer))
         admin-error))))
 
@@ -618,7 +605,6 @@
        [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]
        [:ul (map admin-testimony-li testimonies)]
        [:p [:a {:href "/admin/testimonies/add"} "Add a new Testimony"]]
-       [:h4 "Administration Links"]
        admin-footer))))
 
 (defn admin-testimonies-template
@@ -645,7 +631,6 @@
          [:a {:href (str "/admin/testimonies/delete?slug="
                          (:testimony/slug testimony))}
           "Delete this testimony"]])
-      [:h4 "Administration Links"]
       admin-footer))))
 
 (defn admin-testimonies-add
@@ -694,7 +679,6 @@
             [:dd.delForm [:form {:action "/admin/testimonies"
                                  :method "get"}
                           [:input {:type "submit" :name "no" :value "No"}]]]]
-           [:h4 "Administration Links"]
            admin-footer))
         admin-error))))
 
@@ -720,7 +704,6 @@
        [:ul (map admin-scripture-category-li categories)]
        [:p [:a {:href "/admin/scripture/categories/add"}
             "Add a new Scripture Category"]]
-       [:h4 "Administration Links"]
        admin-footer))))
 
 (defn admin-scripture-li
@@ -759,7 +742,6 @@
          [:p [:a {:href (str "/admin/scripture/add?category="
                              (:scripture-category/slug category))}
               "Add a new Scripture"]]])
-      [:h4 "Administration Links"]
       admin-footer))))
 
 (defn admin-scripture-categories-add
@@ -810,7 +792,6 @@
             [:dd.delForm [:form {:action "/admin/scripture"
                                  :method "get"}
                           [:input {:type "submit" :name "no" :value "No"}]]]]
-           [:h4 "Administration Links"]
            admin-footer))
         admin-error))))
 
@@ -840,7 +821,6 @@
                          "&slug="
                          (:scripture/slug scripture))}
           "Delete this scripture"]])
-      [:h4 "Administration Links"]
       admin-footer))))
 
 (defn admin-scripture-add
@@ -895,7 +875,6 @@
                                  :method "get"}
                           [:input {:type "hidden" :name "slug" :value cat-slug}]
                           [:input {:type "submit" :name "no" :value "No"}]]]]
-           [:h4 "Administration Links"]
            admin-footer))
         admin-error))))
 
