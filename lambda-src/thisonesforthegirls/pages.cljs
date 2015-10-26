@@ -411,7 +411,7 @@
     [:li [:span.sep "|"] [:a {:href "/admin/community-resources"}
                           " Community Resources "]]
     [:li [:span.sep "|"] [:a {:href "/admin/contact"} " Contact Us "]]
-    [:li [:span.sep "|"] [:a {:href "/admin/logout"} " Log out "]]]])
+    [:li [:span.sep "|"] [:a#logout {:href "/admin/logout"} " Log out "]]]])
 
 (def admin-error (html error-fragment))
 

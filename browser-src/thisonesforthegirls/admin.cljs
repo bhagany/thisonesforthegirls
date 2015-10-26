@@ -92,6 +92,15 @@
                                          headers)))))]
       (e/listen body e/EventType.SUBMIT cb))))
 
+(defonce logout
+  (let [body (aget (dom/getElementsByTagNameAndClass "body") 0)]
+    (letfn [(cb [e]
+              (when (= "logout" (.getAttribute (.-target e) "id"))
+                (.preventDefault e)
+                (cookies/remove "jwt" "/admin")
+                (.reload (.-location js/window))))]
+      (e/listen body e/EventType.CLICK cb))))
+
 (defonce get-page
   (main admin-page-url))
 
