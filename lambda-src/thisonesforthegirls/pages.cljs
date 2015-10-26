@@ -703,50 +703,41 @@
   ([pages]
    (admin-scripture-categories-template pages {}))
   ([pages category]
-   (go
-     (let [{:keys [lambda-base]} pages
-           name (gs/htmlEscape (:scripture-category/name category))]
-       (html
-        [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
-        [:p#error]
-        [:h2#success]
-        [:form {:action (str lambda-base "edit-page") :method "post"}
-         [:dl
-          [:dt [:label {:for "name"} "Category Name"]]
-          [:dd [:input {:type "text" :name "name" :value name}]]
-          [:dt "&nbsp;"]
-          [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
-        (when-not (empty? category)
-          [:div
-           [:p
-            [:a {:href (str "/admin/scripture/categories/delete?slug="
-                            (:scripture-category/slug category))}
-             "Delete this Category"]]
-           (let [{:keys [db]} pages
-                 conn (<! (:conn-ch db))
-                 scriptures (d/q '[:find [(pull ?e [*]) ...]
-                                   :in $ ?cat-id
-                                   :where [?e :scripture/category ?cat-id]]
-                                 @conn
-                                 (:db/id category))]
-             (when-not (empty? scriptures)
-               [:h3 "Edit the following scriptures"]
-               [:ul (map admin-scripture-li scriptures)]))
-           [:p [:a {:href (str "/admin/scripture/add?category="
-                               (:scripture-category/slug category))}
-                "Add a new Scripture"]]])
-        [:h4 "Administration Links"]
-        admin-footer)))))
+   (let [{:keys [lambda-base]} pages
+         name (gs/htmlEscape (:scripture-category/name category))]
+     (html
+      [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
+      [:p#error]
+      [:h2#success]
+      [:form {:action (str lambda-base "edit-page") :method "post"}
+       [:dl
+        [:dt [:label {:for "name"} "Category Name"]]
+        [:dd [:input {:type "text" :name "name" :value name}]]
+        [:dt "&nbsp;"]
+        [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+      (when-not (empty? category)
+        [:div
+         [:p
+          [:a {:href (str "/admin/scripture/categories/delete?slug="
+                          (:scripture-category/slug category))}
+           "Delete this Category"]]
+         (when-let [scriptures (:scripture/_category category)]
+           [:h3 "Edit the following scriptures"]
+           [:ul (map admin-scripture-li scriptures)])
+         [:p [:a {:href (str "/admin/scripture/add?category="
+                             (:scripture-category/slug category))}
+              "Add a new Scripture"]]])
+      [:h4 "Administration Links"]
+      admin-footer))))
 
 (defn admin-scripture-categories-add
   [pages]
-  (go
-    (<! (admin-scripture-categories-template pages))))
+  (admin-scripture-categories-template pages))
 
 (defn scripture-category-by-slug
   [db slug]
   (try
-    (d/q '[:find (pull ?cat-id [*]) .
+    (d/q '[:find (pull ?cat-id [* {:scripture/_category [*]}]) .
            :in $ ?cat-id]
          db
          [:scripture-category/slug slug])
@@ -761,7 +752,7 @@
           conn (<! (:conn-ch db))
           category (scripture-category-by-slug @conn slug)]
       (if (and slug category)
-        (<! (admin-scripture-categories-template pages category))
+        (admin-scripture-categories-template pages category)
         admin-error))))
 
 (defn admin-scripture-categories-delete

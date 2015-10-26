@@ -144,7 +144,7 @@
       (s/starts-with? path "/admin/testimonies/edit") (<! (p/admin-testimonies-edit pages query))
       (s/starts-with? path "/admin/testimonies/delete") (<! (p/admin-testimonies-delete pages query))
       (= path "/admin/scripture/categories") (<! (p/admin-scripture-categories pages))
-      (= path "/admin/scripture/categories/add") (<! (p/admin-scripture-categories-add pages))
+      (= path "/admin/scripture/categories/add") (p/admin-scripture-categories-add pages)
       (s/starts-with? path "/admin/scripture/categories/edit") (<! (p/admin-scripture-categories-edit pages query))
       (s/starts-with? path "/admin/scripture/categories/delete") (<! (p/admin-scripture-categories-delete pages query))
       :else p/admin-error)))
