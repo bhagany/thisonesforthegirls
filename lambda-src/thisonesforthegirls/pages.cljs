@@ -115,7 +115,7 @@
         text (gs/htmlEscape (:scripture/text scripture))]
     [[:dt
       [:label reference]]
-     [:dd text]]))
+     [:dd (md->html text)]]))
 
 (defn scripture-category
   [entity]
@@ -368,6 +368,12 @@
                     :content (admin-template "Scripture Admin | Edit Category")}
                    {:path "admin/scripture/categories/delete"
                     :content (admin-template "Scripture Admin | Delete Category")}
+                   {:path "admin/scripture/add"
+                    :content (admin-template "Scripture Admin | Add")}
+                   {:path "admin/scripture/edit"
+                    :content (admin-template "Scripture Admin | Edit")}
+                   {:path "admin/scripture/delete"
+                    :content (admin-template "Scripture Admin | Delete")}
                    {:path "admin/scripture"
                     :content (admin-template "Scripture Admin")}
                    {:path "admin/testimonies"
@@ -694,8 +700,9 @@
 
 (defn admin-scripture-li
   [scripture]
-  (let [ref (gs/htmlEscape (:scripture/reference scripture))]
-    [:li [:a {:href (str "/admin/scripture/edit?slug="
+  (let [ref (gs/htmlEscape (:scripture/reference scripture))
+        cat-slug (:scripture-category/slug (:scripture/category scripture))]
+    [:li [:a {:href (str "/admin/scripture/edit?category=" cat-slug "&slug="
                          (:scripture/slug scripture))}
           ref]]))
 
@@ -737,7 +744,9 @@
 (defn scripture-category-by-slug
   [db slug]
   (try
-    (d/q '[:find (pull ?cat-id [* {:scripture/_category [*]}]) .
+    (d/q '[:find (pull ?cat-id [* {:scripture/_category
+                                   [* {:scripture/category
+                                       [:scripture-category/slug]}]}]) .
            :in $ ?cat-id]
          db
          [:scripture-category/slug slug])
@@ -775,6 +784,91 @@
                           [:input {:type "submit" :name "yes" :value "Yes"}]]]
             [:dd.delForm [:form {:action "/admin/scripture"
                                  :method "get"}
+                          [:input {:type "submit" :name "no" :value "No"}]]]]
+           [:h4 "Administration Links"]
+           admin-footer))
+        admin-error))))
+
+(defn admin-scripture-template
+  ([pages]
+   (admin-scripture-template pages {}))
+  ([pages scripture]
+   (let [{:keys [lambda-base]} pages
+         reference (gs/htmlEscape (:scripture/reference scripture))
+         text (gs/htmlEscape (:scripture/text scripture))]
+     (html
+      [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
+      [:p#error]
+      [:h2#success]
+      [:form {:action (str lambda-base "edit-page") :method "post"}
+       [:dl
+        [:dt [:label {:for "reference"} "Reference"]]
+        [:dd [:input {:type "text" :name "reference" :value reference}]]
+        [:dt [:label {:for "text"} "Scripture"]]
+        [:dd [:textarea {:name "text" :rows "24" :cols "80"} text]]
+        [:dt "&nbsp;"]
+        [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+      (when-not (empty? scripture)
+        [:p
+         [:a {:href (str "/admin/scripture/delete?category="
+                         (:scripture-category/slug (:scripture/category scripture))
+                         "&slug="
+                         (:scripture/slug scripture))}
+          "Delete this scripture"]])
+      [:h4 "Administration Links"]
+      admin-footer))))
+
+(defn admin-scripture-add
+  [pages]
+  (admin-scripture-template pages))
+
+(defn scripture-by-slug-and-category
+  [db slug category-slug]
+  (try
+    (d/q '[:find (pull ?s [* {:scripture/category
+                              [:scripture-category/slug]}]) .
+           :in $ ?s ?cat-s
+           :where [?s :scripture/category ?cat-s]]
+         db
+         [:scripture/slug slug]
+         [:scripture-category/slug category-slug])
+    (catch js/Error e
+      nil)))
+
+(defn admin-scripture-edit
+  [pages query]
+  (go
+    (let [{:keys [db]} pages
+          slug (get-query-param query "slug")
+          cat-slug (get-query-param query "category")
+          conn (<! (:conn-ch db))
+          scripture (scripture-by-slug-and-category @conn slug cat-slug)]
+      (if (and slug cat-slug scripture)
+        (admin-scripture-template pages scripture)
+        admin-error))))
+
+(defn admin-scripture-delete
+  [pages query]
+  (go
+    (let [{:keys [db lambda-base]} pages
+          slug (get-query-param query "slug")
+          cat-slug (get-query-param query "category")
+          conn (<! (:conn-ch db))
+          scripture (scripture-by-slug-and-category @conn slug cat-slug)]
+      (if (and slug cat-slug scripture)
+        (let [reference (gs/htmlEscape (:scripture/reference scripture))]
+          (html
+           [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
+           [:p#error]
+           [:h2#success]
+           [:h2 (str "Do you want to delete \"" reference "\"?")]
+           [:dl
+            [:dd.delForm [:form {:action (str lambda-base "delete-page")
+                                 :method "post"}
+                          [:input {:type "submit" :name "yes" :value "Yes"}]]]
+            [:dd.delForm [:form {:action "/admin/scripture/categories/edit"
+                                 :method "get"}
+                          [:input {:type "hidden" :name "slug" :value cat-slug}]
                           [:input {:type "submit" :name "no" :value "No"}]]]]
            [:h4 "Administration Links"]
            admin-footer))
@@ -1072,3 +1166,85 @@
                  pages
                  [scripture-categories]
                  "The scripture category was successfully deleted"))))))))
+
+;; Scripture
+
+(defn add-scripture
+  [pages event]
+  (go
+    (let [{:keys [db]} pages
+          {:keys [query reference text]} event
+          conn (<! (:conn-ch db))
+          slug (str/slugify reference)
+          cat-slug (get-query-param query "category")
+          [err tx-info] (<! (db/transact!-ch
+                             db
+                             [{:db/id -1
+                               :scripture/reference reference
+                               :scripture/text text
+                               :scripture/slug slug
+                               :scripture/category [:scripture-category/slug
+                                                    cat-slug]}]))
+          category (scripture-category-by-slug (:db-after tx-info) cat-slug)]
+      (if err
+        (js/Error. err)
+        (<! (generate-pages
+             pages
+             [scripture-categories
+              (scripture-category category)]
+             "The scripture was successfully added"))))))
+
+(defn edit-scripture
+  [pages event]
+  (go
+    (let [{:keys [db]} pages
+          {:keys [query reference text]} event
+          old-slug (get-query-param query "slug")
+          cat-slug (get-query-param query "category")
+          slug (str/slugify reference)
+          [err tx-info] (if old-slug
+                          (<! (db/transact!-ch
+                               db
+                               [{:db/id [:scripture/slug old-slug]
+                                 :scripture/text text
+                                 :scripture/slug slug
+                                 :scripture/category [:scripture-category/slug
+                                                      cat-slug]}]))
+                          ["Invalid slug"])]
+      (if err
+        (js/Error. err)
+        (let [entity (d/q '[:find (pull
+                                   ?e
+                                   [* {:scripture/_category [*]}]) .
+                            :in $ ?e]
+                          (:db-after tx-info)
+                          [:scripture-category/slug cat-slug])]
+          (<! (generate-pages
+               pages
+               [(scripture-category entity)]
+               "The scripture was successfully edited")))))))
+
+(defn delete-scripture
+  [pages event]
+  (go
+    (let [{:keys [db]} pages
+          {:keys [query]} event
+          slug (get-query-param query "slug")
+          cat-slug (get-query-param query "category")
+          conn (<! (:conn-ch db))
+          scripture (scripture-by-slug-and-category @conn slug cat-slug)
+          [err tx-info] (<! (db/transact!-ch
+                             db
+                             [[:db.fn/retractEntity (:db/id scripture)]]))]
+      (if err
+        (js/Error. err)
+        (let [entity (d/q '[:find (pull
+                                   ?e
+                                   [* {:scripture/_category [*]}]) .
+                            :in $ ?e]
+                          (:db-after tx-info)
+                          [:scripture-category/slug cat-slug])]
+          (<! (generate-pages
+               pages
+               [(scripture-category entity)]
+               "The scripture was successfully deleted")))))))
