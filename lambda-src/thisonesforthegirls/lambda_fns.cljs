@@ -150,6 +150,7 @@
       (s/starts-with? path "/admin/scripture/add") (p/admin-scripture-add pages)
       (s/starts-with? path "/admin/scripture/edit") (<! (p/admin-scripture-edit pages query))
       (s/starts-with? path "/admin/scripture/delete") (<! (p/admin-scripture-delete pages query))
+      (= path "/admin/contact") (<! (p/admin-contact pages))
       :else p/admin-error)))
 
 (defn admin-page
@@ -184,7 +185,8 @@
                   (= path "/admin/scripture/categories/add") p/add-scripture-category
                   (s/starts-with? path "/admin/scripture/categories/edit") p/edit-scripture-category
                   (s/starts-with? path "/admin/scripture/add") p/add-scripture
-                  (s/starts-with? path "/admin/scripture/edit") p/edit-scripture)]
+                  (s/starts-with? path "/admin/scripture/edit") p/edit-scripture
+                  (= path "/admin/contact") p/edit-contact)]
             (<! (edit-fn pages event)))
           (js/Error "Please log in"))))))
 

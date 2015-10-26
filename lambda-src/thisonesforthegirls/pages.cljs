@@ -377,7 +377,9 @@
                    {:path "admin/scripture"
                     :content (admin-template "Scripture Admin")}
                    {:path "admin/testimonies"
-                    :content (admin-template "Testimonies Admin")}]
+                    :content (admin-template "Testimonies Admin")}
+                   {:path "admin/contact"
+                    :content (admin-template "Contact Admin")}]
           s-cats (->> (d/q '[:find [(pull ?e [* {:scripture/_category [*]}]) ...]
                              :where [?e :scripture-category/name]] @conn)
                       (map scripture-category))
@@ -434,6 +436,29 @@
     "Choose accordingly"]
    [:h4 "Administration Links"]
    admin-footer))
+
+(defn admin-contact
+  [pages]
+  (go
+    (let [{:keys [db lambda-base]} pages
+          conn (<! (:conn-ch db))
+          email (-> '[:find ?email .
+                      :in $ ?contact
+                      :where [?contact :contact/email ?email]]
+                    (d/q @conn [:db/ident :contact])
+                    gs/htmlEscape)]
+      (html
+       [:img.header {:src "/assets/contact-us.gif" :alt "Contact Us"}]
+       [:p#error]
+       [:h2#success]
+       [:form {:action (str lambda-base "edit-page") :method "post"}
+        [:dl
+         [:dt [:label {:for "email"} "Contact Email"]]
+         [:dd [:input {:type "text" :name "email" :value email}]]
+         [:dt "&nbsp;"]
+         [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+       [:h4 "Administration Links"]
+       admin-footer))))
 
 (defn admin-basic
   [ident header-img text-label]
@@ -910,6 +935,20 @@
   [pages path]
   (let [{:keys [s3-conn html-bucket]} pages]
     (s3/delete-obj!-ch s3-conn html-bucket path)))
+
+(defn edit-contact
+  [pages event]
+  (go
+    (let [{:keys [db]} pages
+          {:keys [email]} event
+          [err] (<! (db/transact!-ch
+                     db
+                     [{:db/id -1
+                       :db/ident :contact
+                       :contact/email email}]))]
+      (if err
+        (js/Error. err)
+        "The contact email was successfully updated"))))
 
 (defn edit-basic
   [ident gen-fn]

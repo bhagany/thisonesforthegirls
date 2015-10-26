@@ -42,7 +42,9 @@
 
    :testimony/title {}
    :testimony/slug {:db/unique :db.unique/identity}
-   :testimony/body {}})
+   :testimony/body {}
+
+   :contact/email {}})
 
 (def my-write-handlers (assoc dt/write-handlers Iter (transit/ListHandler.)))
 
