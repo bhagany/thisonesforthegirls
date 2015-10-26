@@ -65,8 +65,7 @@
           (set! (.-innerHTML error-p) (.-errorMessage json))
           (style/setStyle error-p "display" "block"))))))
 
-(defn form-submitter
-  []
+(defonce form-submitter
   (let [body (aget (dom/getElementsByTagNameAndClass "body") 0)]
     (letfn [(cb [e]
               (let [form (.-target e)
@@ -103,6 +102,3 @@
 
 (defonce get-page
   (main admin-page-url))
-
-(defonce submit-listener
-  (form-submitter))
