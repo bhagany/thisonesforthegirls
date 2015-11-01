@@ -6,7 +6,7 @@
             [datascript.core :as d]
             [datascript.transit :as dt]
             [thisonesforthegirls.s3 :as s3])
-  (:require-macros [cljs.core.async.macros :refer [go go-loop]])
+  (:require-macros [cljs.core.async.macros :refer [go]])
   (:import [goog.object]))
 
 (def schema
@@ -87,14 +87,10 @@
   Db
   (refresh-conn-ch [this]
     (let [s3-conn-ch (chan 1 (map (s3-obj->conn schema)))
-          new-conn-ch (chan)]
+          new-conn-ch (promise-chan)]
       (pipe (s3/get-obj-ch s3-conn bucket key-name) s3-conn-ch)
-      (go-loop [conn nil]
-        (let [conn* (if conn
-                      conn
-                      (<! s3-conn-ch))]
-          (>! new-conn-ch conn*)
-          (recur conn*)))
+      (go
+        (>! new-conn-ch (<! s3-conn-ch)))
       (assoc this :conn-ch new-conn-ch)))
   (persist!-ch [_]
     (go
