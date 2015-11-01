@@ -20,10 +20,9 @@
 
 (defn show-success
   [message]
-  (let [success (.getElementById js/document "success")]
-    (when success
-      (set! (.-innerHTML success) message)
-      (style/setStyle success "display" "block"))))
+  (when-let [success (.getElementById js/document "success")]
+    (set! (.-innerHTML success) message)
+    (style/setStyle success "display" "block")))
 
 (defn main
   [page-url]
