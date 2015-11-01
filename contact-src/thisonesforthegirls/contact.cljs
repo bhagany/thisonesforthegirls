@@ -6,9 +6,6 @@
             [goog.style :as style])
   (:import [goog.net XhrIo]))
 
-;; This must be set in your build
-(goog-define contact-url "http://your.api.com")
-
 (defn handle-ajax-response
   [response]
   (let [xhr (.-target response)
