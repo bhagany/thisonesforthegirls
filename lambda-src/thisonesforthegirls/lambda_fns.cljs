@@ -49,6 +49,32 @@
       (catch (goog.object/get jwt "JsonWebTokenError") e
         false))))
 
+(defn admin-page-router
+  [pages path query]
+  (go
+    (cond
+      (= path "/admin") (p/admin pages)
+      (= path "/admin/welcome") (<! (p/admin-home pages))
+      (= path "/admin/about") (<! (p/admin-about-us pages))
+      (= path "/admin/community-resources") (<! (p/admin-resources pages))
+      (= path "/admin/devotions") (<! (p/admin-devotions pages))
+      (= path "/admin/devotions/add") (p/admin-devotions-add pages)
+      (s/starts-with? path "/admin/devotions/edit") (<! (p/admin-devotions-edit pages query))
+      (s/starts-with? path "/admin/devotions/delete") (<! (p/admin-devotions-delete pages query))
+      (= path "/admin/testimonies") (<! (p/admin-testimonies pages))
+      (= path "/admin/testimonies/add") (p/admin-testimonies-add pages)
+      (s/starts-with? path "/admin/testimonies/edit") (<! (p/admin-testimonies-edit pages query))
+      (s/starts-with? path "/admin/testimonies/delete") (<! (p/admin-testimonies-delete pages query))
+      (= path "/admin/scripture/categories") (<! (p/admin-scripture-categories pages))
+      (= path "/admin/scripture/categories/add") (p/admin-scripture-categories-add pages)
+      (s/starts-with? path "/admin/scripture/categories/edit") (<! (p/admin-scripture-categories-edit pages query))
+      (s/starts-with? path "/admin/scripture/categories/delete") (<! (p/admin-scripture-categories-delete pages query))
+      (s/starts-with? path "/admin/scripture/add") (p/admin-scripture-add pages)
+      (s/starts-with? path "/admin/scripture/edit") (<! (p/admin-scripture-edit pages query))
+      (s/starts-with? path "/admin/scripture/delete") (<! (p/admin-scripture-delete pages query))
+      (= path "/admin/contact") (<! (p/admin-contact pages))
+      :else p/admin-error)))
+
 ;;; Functions for export
 
 ;; Private functions (not exposed through API Gateway)
@@ -132,32 +158,6 @@
                                         (clj->js
                                          {:jwt (make-login-token @conn)}))
             :else (js/Error. "Wrong username or password")))))))
-
-(defn admin-page-router
-  [pages path query]
-  (go
-    (cond
-      (= path "/admin") (p/admin pages)
-      (= path "/admin/welcome") (<! (p/admin-home pages))
-      (= path "/admin/about") (<! (p/admin-about-us pages))
-      (= path "/admin/community-resources") (<! (p/admin-resources pages))
-      (= path "/admin/devotions") (<! (p/admin-devotions pages))
-      (= path "/admin/devotions/add") (p/admin-devotions-add pages)
-      (s/starts-with? path "/admin/devotions/edit") (<! (p/admin-devotions-edit pages query))
-      (s/starts-with? path "/admin/devotions/delete") (<! (p/admin-devotions-delete pages query))
-      (= path "/admin/testimonies") (<! (p/admin-testimonies pages))
-      (= path "/admin/testimonies/add") (p/admin-testimonies-add pages)
-      (s/starts-with? path "/admin/testimonies/edit") (<! (p/admin-testimonies-edit pages query))
-      (s/starts-with? path "/admin/testimonies/delete") (<! (p/admin-testimonies-delete pages query))
-      (= path "/admin/scripture/categories") (<! (p/admin-scripture-categories pages))
-      (= path "/admin/scripture/categories/add") (p/admin-scripture-categories-add pages)
-      (s/starts-with? path "/admin/scripture/categories/edit") (<! (p/admin-scripture-categories-edit pages query))
-      (s/starts-with? path "/admin/scripture/categories/delete") (<! (p/admin-scripture-categories-delete pages query))
-      (s/starts-with? path "/admin/scripture/add") (p/admin-scripture-add pages)
-      (s/starts-with? path "/admin/scripture/edit") (<! (p/admin-scripture-edit pages query))
-      (s/starts-with? path "/admin/scripture/delete") (<! (p/admin-scripture-delete pages query))
-      (= path "/admin/contact") (<! (p/admin-contact pages))
-      :else p/admin-error)))
 
 (defn admin-page
   [lambda-fns]
