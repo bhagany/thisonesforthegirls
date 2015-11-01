@@ -42,7 +42,13 @@
                             {:name   "login"
                              :invoke thisonesforthegirls.system/login}
                             {:name   "admin-page"
-                             :invoke thisonesforthegirls.system/admin-page}]}
+                             :invoke thisonesforthegirls.system/admin-page}
+                            {:name   "edit-page"
+                             :invoke thisonesforthegirls.system/edit-page}
+                            {:name   "delete-page"
+                             :invoke thisonesforthegirls.system/delete-page}
+                            {:name   "send-email"
+                             :invoke thisonesforthegirls.system/send-email}]}
 
   :cljsbuild {:builds [{:id "lambda"
                         :source-paths ["lambda-src"]

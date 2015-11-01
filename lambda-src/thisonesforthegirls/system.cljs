@@ -51,3 +51,15 @@
 (defn ^:export admin-page
   [event context]
   (with-started-system l/admin-page system event context))
+
+(defn ^:export edit-page
+  [event context]
+  (with-started-system l/edit-page system event context))
+
+(defn ^:export delete-page
+  [event context]
+  (with-started-system l/delete-page system event context))
+
+(defn ^:export send-email
+  [event context]
+  (with-started-system l/send-email system event context))
