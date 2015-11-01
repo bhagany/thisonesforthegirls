@@ -70,7 +70,7 @@
                         :source-paths ["admin-src"]
                         :compiler {:main thisonesforthegirls.admin
                                    :output-to "out/browser/admin.js"
-                                   :output-dir "out/browser/admin"
+                                   :output-dir "out/admin/files"
                                    :asset-path "assets/js/admin"
                                    :closure-defines {:thisonesforthegirls.admin.admin_page_url "/lambda-fns/admin-page"}
                                    :optimizations :advanced}}
@@ -87,9 +87,8 @@
                         :source-paths ["contact-src"]
                         :compiler {:main thisonesforthegirls.contact
                                    :output-to "out/browser/contact.js"
-                                   :output-dir "out/browser/contact"
+                                   :output-dir "out/contact/files"
                                    :asset-path "assets/js/contact"
-                                   :closure-defines {:thisonesforthegirls.contact.email_url "/lambda-fns/send-email"}
                                    :optimizations :advanced}}
                        {:id "contact-dev"
                         :source-paths ["contact-src"]
@@ -98,6 +97,5 @@
                                    :output-to "out/browser-dev/contact.js"
                                    :output-dir "out/browser-dev/contact"
                                    :asset-path "/assets/js/contact"
-                                   :closure-defines {:thisonesforthegirls.contact.email_url "/lambda-fns/send-email"}
                                    :optimizations :none}}]}
   :figwheel {})
