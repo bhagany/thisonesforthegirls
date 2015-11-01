@@ -117,20 +117,23 @@
       [:label reference]]
      [:dd (md->html text)]]))
 
+(defn scripture-category*
+  [entity]
+  {:path (str "scripture/" (:scripture-category/slug entity))
+   :content (site-template
+             (str "Scripture | " (:scripture-category/name entity))
+             [[:div#scripture
+               [:img.header {:src "/assets/scripture.gif"
+                             :alt "Scripture"}]
+               (when-not (empty? (:scripture/_category entity))
+                 [:dl (mapcat scripture-markup
+                              (:scripture/_category entity))])
+               [:p [:a {:href "/scripture"} "Back to Categories"]]]])})
+
 (defn scripture-category
   [entity]
   (fn [_]
-    (go
-      {:path (str "scripture/" (:scripture-category/slug entity))
-       :content (site-template
-                 (str "Scripture | " (:scripture-category/name entity))
-                 [[:div#scripture
-                   [:img.header {:src "/assets/scripture.gif"
-                                 :alt "Scripture"}]
-                   (when-not (empty? (:scripture/_category entity))
-                     [:dl (mapcat scripture-markup
-                                  (:scripture/_category entity))])
-                   [:p [:a {:href "/scripture"} "Back to Categories"]]]])})))
+    (go (scripture-category* entity))))
 
 (defn testimony-list-item
   [testimony]
@@ -138,25 +141,28 @@
     [:li [:a {:href (str "/testimonies/" (:testimony/slug testimony))}
           title]]))
 
+(defn testimony*
+  [entity]
+  {:path (str "testimonies/" (:testimony/slug entity))
+   :content (site-template
+             (str "Testimonies | " (:testimony/title entity))
+             (let [title (gs/htmlEscape (:testimony/title entity))
+                   body (gs/htmlEscape (:testimony/body entity))]
+               [[:div#testimonies
+                 [:img.header {:src "/assets/testimonies.gif"
+                               :alt "Testimonies"}]
+                 [:p [:a {:href "/testimonies"}
+                      "Back to Testimony Links"]]
+                 [:dl
+                  [:dt title]
+                  [:dd (md->html body)]]
+                 [:p [:a {:href "/testimonies"}
+                      "Back to Testimony Links"]]]]))})
+
 (defn testimony
   [entity]
   (fn [_]
-    (go
-      {:path (str "testimonies/" (:testimony/slug entity))
-       :content (site-template
-                 (str "Testimonies | " (:testimony/title entity))
-                 (let [title (gs/htmlEscape (:testimony/title entity))
-                       body (gs/htmlEscape (:testimony/body entity))]
-                   [[:div#testimonies
-                     [:img.header {:src "/assets/testimonies.gif"
-                                   :alt "Testimonies"}]
-                     [:p [:a {:href "/testimonies"}
-                          "Back to Testimony Links"]]
-                     [:dl
-                      [:dt title]
-                      [:dd (md->html body)]]
-                     [:p [:a {:href "/testimonies"}
-                          "Back to Testimony Links"]]]]))})))
+    (go (testimony* entity))))
 
 (defn contact-us
   [pages]
@@ -377,10 +383,10 @@
                     :content (admin-template "Contact Admin")}]
           s-cats (->> (d/q '[:find [(pull ?e [* {:scripture/_category [*]}]) ...]
                              :where [?e :scripture-category/name]] @conn)
-                      (map scripture-category))
+                      (map scripture-category*))
           tmonies (->> (d/q '[:find [(pull ?e [*]) ...]
                               :where [?e :testimony/title]] @conn)
-                       (map testimony))]
+                       (map testimony*))]
       (-> defined
           (into s-cats)
           (into tmonies)))))
