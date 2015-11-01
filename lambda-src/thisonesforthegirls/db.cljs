@@ -1,5 +1,5 @@
 (ns thisonesforthegirls.db
-  (:require [cljs.core.async :refer [chan pipe >! <! close!]]
+  (:require [cljs.core.async :refer [promise-chan pipe >! <! close!]]
             [cognitect.transit :as transit]
             [com.stuartsierra.component :as component]
             [datascript.btset :refer [Iter]]

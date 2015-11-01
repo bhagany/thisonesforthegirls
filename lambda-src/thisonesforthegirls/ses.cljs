@@ -1,5 +1,5 @@
 (ns thisonesforthegirls.ses
-  (:require [cljs.core.async :refer [chan >! close!]]
+  (:require [cljs.core.async :refer [promise-chan >!]]
             [cljs.nodejs :as node]
             [com.stuartsierra.component :as component])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -22,7 +22,7 @@
 
   SES
   (send!-ch [_ from to reply-to message]
-    (let [ch (chan)]
+    (let [ch (promise-chan)]
       (.sendEmail conn
                   (clj->js
                    {:Source from
@@ -32,9 +32,7 @@
                                         :Charset "utf-8"}
                               :Body {:Text {:Data message :Charset "utf-8"}}}})
                   (fn [err obj]
-                    (go
-                      (>! ch [err obj])
-                      (close! ch))))
+                    (go (>! ch [err obj]))))
       ch)))
 
 (defn ses-connection
