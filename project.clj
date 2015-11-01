@@ -28,7 +28,7 @@
                        [source-map-support "0.3.2"]
                        [ws "0.8.0"]]}
 
-  :source-paths ["lambda-src" "lambda-dev" "browser-src"]
+  :source-paths ["lambda-src" "lambda-dev" "admin-src" "contact-src"]
 
   :clean-targets ^{:protect false} ["out" "target"]
 
@@ -60,21 +60,38 @@
                                    :target :nodejs
                                    :optimizations :none
                                    :source-map true}}
-                       {:id "browser"
-                        :source-paths ["browser-src"]
+                       {:id "admin"
+                        :source-paths ["admin-src"]
                         :compiler {:main thisonesforthegirls.admin
                                    :output-to "out/browser/admin.js"
                                    :output-dir "out/browser/admin"
                                    :asset-path "assets/js/admin"
                                    :closure-defines {:thisonesforthegirls.admin.admin_page_url "/lambda-fns/admin-page"}
                                    :optimizations :advanced}}
-                       {:id "browser-dev"
-                        :source-paths ["browser-src"]
+                       {:id "admin-dev"
+                        :source-paths ["admin-src"]
                         :figwheel true
                         :compiler {:main thisonesforthegirls.admin
                                    :output-to "out/browser-dev/admin.js"
                                    :output-dir "out/browser-dev/admin"
                                    :asset-path "/assets/js/admin"
                                    :closure-defines {:thisonesforthegirls.admin.admin_page_url "/lambda-fns/admin-page"}
+                                   :optimizations :none}}
+                       {:id "contact"
+                        :source-paths ["contact-src"]
+                        :compiler {:main thisonesforthegirls.contact
+                                   :output-to "out/browser/contact.js"
+                                   :output-dir "out/browser/contact"
+                                   :asset-path "assets/js/contact"
+                                   :closure-defines {:thisonesforthegirls.contact.email_url "/lambda-fns/send-email"}
+                                   :optimizations :advanced}}
+                       {:id "contact-dev"
+                        :source-paths ["contact-src"]
+                        :figwheel true
+                        :compiler {:main thisonesforthegirls.contact
+                                   :output-to "out/browser-dev/contact.js"
+                                   :output-dir "out/browser-dev/contact"
+                                   :asset-path "/assets/js/contact"
+                                   :closure-defines {:thisonesforthegirls.contact.email_url "/lambda-fns/send-email"}
                                    :optimizations :none}}]}
   :figwheel {})

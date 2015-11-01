@@ -158,25 +158,29 @@
                      [:p [:a {:href "/testimonies"}
                           "Back to Testimony Links"]]]]))})))
 
-(def contact-us
-  (site-template
-   "Contact Us"
-   [[:div#contact
-     [:img.header {:src "/assets/contact-us.gif" :alt "Contact Us"}]
-     [:form {:enctype "application/x-www-form-urlencoded"
-             :action "/contact/send"
-             :method "post"}
-      [:dl
-       [:dt [:label {:for "name"} "Your name"]]
-       [:dd#name [:input {:type "text" :name "name"}]]
-       [:dt [:label {:for "return"} "Your email address"]]
-       [:dd#return [:input {:type "text" :name "return"}]]
-       [:dt [:label {:for "body"} "Message"]]
-       [:dd [:textarea#body {:name "body" :rows "24"
-                             :cols "80"}]]
-       [:dt "&nbsp;"]
-       [:dd [:input#submit {:type "submit" :name "submit"
-                            :value "Submit"}]]]]]]))
+(defn contact-us
+  [pages]
+  (let [{:keys [lambda-base]} pages]
+    (site-template
+     "Contact Us"
+     [[:div#contact
+       [:img.header {:src "/assets/contact-us.gif" :alt "Contact Us"}]
+       [:p#error]
+       [:h2#success]
+       [:form {:action (str lambda-base "send-email")
+               :method "post"}
+        [:dl
+         [:dt [:label {:for "name"} "Your name"]]
+         [:dd#name [:input {:type "text" :name "name"}]]
+         [:dt [:label {:for "reply-to"} "Your email address"]]
+         [:dd#return [:input {:type "text" :name "reply-to"}]]
+         [:dt [:label {:for "message"} "Message"]]
+         [:dd [:textarea#body {:name "message" :rows "24"
+                               :cols "80"}]]
+         [:dt "&nbsp;"]
+         [:dd [:input#submit {:type "submit" :name "submit"
+                              :value "Submit"}]]]]]
+      [:script {:type "text/javascript" :src "/assets/js/contact.js"}]])))
 
 (def error-fragment
   [:div.error
@@ -324,7 +328,7 @@
                    (<! (scripture-categories pages))
                    (<! (testimonies pages))
                    {:path "contact"
-                    :content contact-us}
+                    :content (contact-us pages)}
                    {:path "error"
                     :content error}
                    {:path "admin"

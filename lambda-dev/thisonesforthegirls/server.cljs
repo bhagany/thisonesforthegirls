@@ -25,7 +25,8 @@
                    "/admin-page" (l/admin-page lambda-fns)
                    "/edit-page" (l/edit-page lambda-fns)
                    "/delete-page" (l/delete-page lambda-fns)
-                   "/login" (l/login lambda-fns))]
+                   "/login" (l/login lambda-fns)
+                   "/send-email" (l/send-email lambda-fns))]
       (go
         (let [result (<! (res-fn event {}))]
           (if (instance? js/Error result)

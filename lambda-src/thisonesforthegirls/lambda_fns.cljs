@@ -5,7 +5,8 @@
             [com.stuartsierra.component :as component]
             [datascript.core :as d]
             [thisonesforthegirls.db :as db]
-            [thisonesforthegirls.pages :as p])
+            [thisonesforthegirls.pages :as p]
+            [thisonesforthegirls.ses :as ses])
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:import [goog.object]))
 
@@ -16,7 +17,7 @@
   []
   (component/using
    (map->LambdaFns {})
-   [:db :pages]))
+   [:db :pages :ses-conn]))
 
 ;; Helpers
 
@@ -211,3 +212,28 @@
                   (s/starts-with? path "/admin/scripture/delete") p/delete-scripture)]
             (<! (delete-fn pages event)))
           (js/Error "Please log in"))))))
+
+(defn send-email
+  [lambda-fns]
+  (fn [event context]
+    (go
+      (let [{:keys [name reply-to message]} event
+            {:keys [ses-conn db]} lambda-fns
+            nice-reply-to (str name " <" reply-to ">")
+            conn (<! (:conn-ch db))
+            contact-email (d/q '[:find ?email .
+                                 :where
+                                 [?contact :db/ident :contact]
+                                 [?contact :contact/email ?email]]
+                               @conn)]
+        (if (some empty? [name reply-to message contact-email])
+          (js/Error. "Please fill out all the fields")
+          (let [[err] (<! (ses/send!-ch ses-conn
+                                        "contact@thisonesforthegirls.org"
+                                        "thisonesforthegirls@gmail.com"
+                                        nice-reply-to
+                                        message))]
+            (if err
+              (js/Error. err)
+              (.stringify js/JSON (clj->js {:success "Your message was sent"
+                                            :redirect "/contact"})))))))))

@@ -5,7 +5,8 @@
             [thisonesforthegirls.db :as db]
             [thisonesforthegirls.lambda-fns :as l]
             [thisonesforthegirls.pages :as p]
-            [thisonesforthegirls.s3 :as s3]))
+            [thisonesforthegirls.s3 :as s3]
+            [thisonesforthegirls.ses :as ses]))
 
 (def config
   {:db {:bucket "thisonesforthegirls.org-private"
@@ -16,6 +17,7 @@
 (defn prod-system [config]
   (component/system-map
    :s3-conn (s3/s3-connection)
+   :ses-conn (ses/ses-connection)
    :db (db/datascript-db (get-in config [:db :bucket])
                          (get-in config [:db :key]))
    :lambda-fns (l/lambda-fns)
