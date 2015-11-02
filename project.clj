@@ -72,7 +72,8 @@
                                    :output-to "out/browser/admin.js"
                                    :output-dir "out/admin/files"
                                    :asset-path "assets/js/admin"
-                                   :closure-defines {:thisonesforthegirls.admin.admin_page_url "/lambda-fns/admin-page"}
+                                   :closure-defines {:thisonesforthegirls.admin.admin_page_url
+                                                     "https://ybs1weoc79.execute-api.us-east-1.amazonaws.com/prod/admin-page"}
                                    :optimizations :advanced}}
                        {:id "admin-dev"
                         :source-paths ["admin-src"]

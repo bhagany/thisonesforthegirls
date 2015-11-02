@@ -11,7 +11,7 @@
 (def config
   {:db {:bucket "thisonesforthegirls.org-private"
         :key "db"}
-   :pages {:lambda-base ""
+   :pages {:lambda-base "https://ybs1weoc79.execute-api.us-east-1.amazonaws.com/prod/"
            :html-bucket "thisonesforthegirls.org"}})
 
 (defn prod-system [config]
