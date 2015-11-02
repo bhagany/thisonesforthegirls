@@ -3,6 +3,7 @@
             [goog.dom.forms :as f]
             [goog.events :as e]
             [goog.net.cookies :as cookies]
+            [goog.object :as gobj]
             [goog.style :as style])
   (:import [goog.net XhrIo]))
 
@@ -11,11 +12,11 @@
   (let [xhr (.-target response)
         json (.getResponseJson xhr)]
     (if (< (.getStatus xhr) 300)
-      (let [redirect (.-redirect json)]
-        (cookies/set "contact-message" (.-success json) -1 "/")
+      (let [redirect (gobj/get json "redirect")]
+        (cookies/set "contact-message" (gobj/get json "success"))
         (set! (.-href (.-location js/window)) redirect))
       (let [error-p (.getElementById js/document "error")]
-        (set! (.-innerHTML error-p) (.-errorMessage json))
+        (set! (.-innerHTML error-p) (gobj/get json "errorMessage"))
         (style/setStyle error-p "display" "block")))))
 
 (defonce form-submitter
@@ -25,7 +26,7 @@
               (let [form (.-target e)
                     action (.getAttribute form "action")
                     form-data (f/getFormDataMap form)
-                    xhr-json (->> (goog.object/get form-data "map_")
+                    xhr-json (->> (.-map_ form-data)
                                   js->clj
                                   (map (fn [[k v]] [k (v 0)]))
                                   (into {})
