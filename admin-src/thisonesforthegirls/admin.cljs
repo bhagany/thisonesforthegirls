@@ -29,7 +29,7 @@
 
 (defn main
   [page-url]
-  (let [xhr-json (.stringify js/JSON (clj->js (path-and-query)))
+  (let [xhr-json (.stringify js/JSON (clj->js {:page-info (path-and-query)}))
         jwt (cookies/get "jwt")
         headers (if jwt
                   #js {:x-jwt jwt}
@@ -83,10 +83,11 @@
                         headers (if jwt
                                   #js {:x-jwt jwt}
                                   #js {})
-                        xhr-json (->> (.-map_ form-data)
-                                      js->clj
-                                      (map (fn [[k v]] [k (v 0)]))
-                                      (into (path-and-query))
+                        form-data (->> (.-map_ form-data)
+                                       js->clj
+                                       (map (fn [[k v]] [k (v 0)]))
+                                       (into (path-and-query)))
+                        xhr-json (->> {:form form-data}
                                       clj->js
                                       (.stringify js/JSON))]
                     (goog.net.XhrIo.send action

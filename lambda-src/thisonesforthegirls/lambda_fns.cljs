@@ -139,7 +139,8 @@
 (defn login
   [lambda-fns]
   (fn [event context]
-    (let [{:keys [username password]} event
+    (let [{:keys [form]} event
+          {:keys [username password]} form
           {:keys [db]} lambda-fns
           bcrypt (node/require "bcryptjs")]
       (go
@@ -170,7 +171,8 @@
   [lambda-fns]
   (fn [event context]
     (go
-      (let [{:keys [path query jwt]} event
+      (let [{:keys [page-info jwt]} event
+            {:keys [path query]} page-info
             {:keys [pages db]} lambda-fns
             conn (<! (:conn-ch db))]
         ;; check token, return login form if bad
@@ -182,7 +184,8 @@
   [lambda-fns]
   (fn [event context]
     (go
-      (let [{:keys [path jwt]} event
+      (let [{:keys [form jwt]} event
+            {:keys [path]} form
             {:keys [pages db]} lambda-fns
             conn (<! (:conn-ch db))]
         (if (check-login-token @conn jwt)
@@ -200,14 +203,15 @@
                   (s/starts-with? path "/admin/scripture/add") p/add-scripture
                   (s/starts-with? path "/admin/scripture/edit") p/edit-scripture
                   (= path "/admin/contact") p/edit-contact)]
-            (<! (edit-fn pages event)))
+            (<! (edit-fn pages form)))
           (js/Error "Please log in"))))))
 
 (defn delete-page
   [lambda-fns]
   (fn [event context]
     (go
-      (let [{:keys [path jwt]} event
+      (let [{:keys [form jwt]} event
+            {:keys [path]} form
             {:keys [pages db]} lambda-fns
             conn (<! (:conn-ch db))]
         (if (check-login-token @conn jwt)
@@ -217,14 +221,15 @@
                   (s/starts-with? path "/admin/testimonies/delete") p/delete-testimony
                   (s/starts-with? path "/admin/scripture/categories/delete") p/delete-scripture-category
                   (s/starts-with? path "/admin/scripture/delete") p/delete-scripture)]
-            (<! (delete-fn pages event)))
+            (<! (delete-fn pages form)))
           (js/Error "Please log in"))))))
 
 (defn send-email
   [lambda-fns]
   (fn [event context]
     (go
-      (let [{:keys [name reply-to message]} event
+      (let [{:keys [form]} event
+            {:keys [name reply-to message]} form
             {:keys [ses-conn db]} lambda-fns
             nice-reply-to (str name " <" reply-to ">")
             conn (<! (:conn-ch db))

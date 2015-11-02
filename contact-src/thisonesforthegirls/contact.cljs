@@ -26,10 +26,11 @@
               (let [form (.-target e)
                     action (.getAttribute form "action")
                     form-data (f/getFormDataMap form)
-                    xhr-json (->> (.-map_ form-data)
-                                  js->clj
-                                  (map (fn [[k v]] [k (v 0)]))
-                                  (into {})
+                    form-data (->> (.-map_ form-data)
+                                   js->clj
+                                   (map (fn [[k v]] [k (v 0)]))
+                                   (into {}))
+                    xhr-json (->> {:form form-data}
                                   clj->js
                                   (.stringify js/JSON))]
                 (goog.net.XhrIo.send action

@@ -18,8 +18,7 @@
                  (.parse js/JSON req-body)
                  req-body)
           headers (.-headers request)
-          event (merge {:jwt (goog.object/get headers "x-jwt")
-                        :method (.-method request)}
+          event (merge {:jwt (goog.object/get headers "x-jwt")}
                        (js->clj body :keywordize-keys true))
           res-fn (case (.-url request)
                    "/admin-page" (l/admin-page lambda-fns)

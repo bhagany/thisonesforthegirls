@@ -929,10 +929,10 @@
     (s3/delete-obj!-ch s3-conn html-bucket path)))
 
 (defn edit-contact
-  [pages event]
+  [pages form]
   (go
     (let [{:keys [db]} pages
-          {:keys [email]} event]
+          {:keys [email]} form]
       (if (empty? email)
         (js/Error. "Please fill out all the fields")
         (let [[err] (<! (db/transact!-ch
@@ -949,10 +949,10 @@
 
 (defn edit-basic
   [ident gen-fn]
-  (fn [pages event]
+  (fn [pages form]
     (go
       (let [{:keys [db]} pages
-            {:keys [text]} event]
+            {:keys [text]} form]
         (if (empty? text)
           (js/Error. "Please fill out all the fields")
           (let [[err] (<! (db/transact!-ch
@@ -977,10 +977,10 @@
 (def edit-resources (edit-basic :resources resources))
 
 (defn add-devotion
-  [pages event]
+  [pages form]
   (go
     (let [{:keys [db]} pages
-          {:keys [title author devotion]} event]
+          {:keys [title author devotion]} form]
       (if (some empty? [title author devotion])
         (js/Error. "Please fill out all the fields")
         (let [conn (<! (:conn-ch db))
@@ -1011,10 +1011,10 @@
                             :redirect "/admin/devotions"}))))))))))
 
 (defn edit-devotion
-  [pages event]
+  [pages form]
   (go
     (let [{:keys [db]} pages
-          {:keys [query title author devotion]} event]
+          {:keys [query title author devotion]} form]
       (if (some empty? [title author devotion])
         (js/Error. "Please fill out all the fields")
         (let [old-slug (get-query-param query "slug")
@@ -1040,10 +1040,10 @@
                             :redirect "/admin/devotions"}))))))))))
 
 (defn delete-devotion
-  [pages event]
+  [pages form]
   (go
     (let [{:keys [db]} pages
-          {:keys [path query]} event
+          {:keys [path query]} form
           slug (get-query-param query "slug")
           conn (<! (:conn-ch db))
           featured? (d/q '[:find ?featured .
@@ -1082,10 +1082,10 @@
                         :redirect "/admin/devotions"}))))))))
 
 (defn add-testimony
-  [pages event]
+  [pages form]
   (go
     (let [{:keys [db]} pages
-          {:keys [title body]} event]
+          {:keys [title body]} form]
       (if (some empty? [title body])
         (js/Error. "Please fill out all the fields")
         (let [conn (<! (:conn-ch db))
@@ -1108,10 +1108,10 @@
                             :redirect "/admin/testimonies"}))))))))))
 
 (defn edit-testimony
-  [pages event]
+  [pages form]
   (go
     (let [{:keys [db]} pages
-          {:keys [query title body]} event]
+          {:keys [query title body]} form]
       (if (some empty? [title body])
         (js/Error. "Please fill out all the fields")
         (let [old-slug (get-query-param query "slug")
@@ -1140,10 +1140,10 @@
                                 :redirect "/admin/testimonies"}))))))))))))
 
 (defn delete-testimony
-  [pages event]
+  [pages form]
   (go
     (let [{:keys [db]} pages
-          {:keys [query]} event
+          {:keys [query]} form
           slug (get-query-param query "slug")
           conn (<! (:conn-ch db))
           [err] (<! (db/transact!-ch
@@ -1165,10 +1165,10 @@
 ;; Scripture Categories
 
 (defn add-scripture-category
-  [pages event]
+  [pages form]
   (go
     (let [{:keys [db]} pages
-          {:keys [name]} event]
+          {:keys [name]} form]
       (if (empty? name)
         (js/Error. "Please fill out all the fields")
         (let [conn (<! (:conn-ch db))
@@ -1191,10 +1191,10 @@
                     :redirect "/admin/scripture/categories"}))))))))))
 
 (defn edit-scripture-category
-  [pages event]
+  [pages form]
   (go
     (let [{:keys [db]} pages
-          {:keys [query name]} event]
+          {:keys [query name]} form]
       (if (empty? name)
         (js/Error. "Please fill out all the fields")
         (let [old-slug (get-query-param query "slug")
@@ -1230,10 +1230,10 @@
                        :redirect "/admin/scripture/categories"})))))))))))))
 
 (defn delete-scripture-category
-  [pages event]
+  [pages form]
   (go
     (let [{:keys [db]} pages
-          {:keys [query]} event
+          {:keys [query]} form
           slug (get-query-param query "slug")
           conn (<! (:conn-ch db))
           [err] (<! (db/transact!-ch
@@ -1258,10 +1258,10 @@
 ;; Scripture
 
 (defn add-scripture
-  [pages event]
+  [pages form]
   (go
     (let [{:keys [db]} pages
-          {:keys [query reference text]} event]
+          {:keys [query reference text]} form]
       (if (some empty? [reference text])
         (js/Error. "Please fill out all the fields")
         (let [conn (<! (:conn-ch db))
@@ -1292,10 +1292,10 @@
                                    cat-slug)}))))))))))
 
 (defn edit-scripture
-  [pages event]
+  [pages form]
   (go
     (let [{:keys [db]} pages
-          {:keys [query reference text]} event]
+          {:keys [query reference text]} form]
       (if (some empty? [reference text])
         (js/Error. "Please fill out all the fields")
         (let [old-slug (get-query-param query "slug")
@@ -1330,10 +1330,10 @@
                                      "?slug=" cat-slug)})))))))))))
 
 (defn delete-scripture
-  [pages event]
+  [pages form]
   (go
     (let [{:keys [db]} pages
-          {:keys [query]} event
+          {:keys [query]} form
           slug (get-query-param query "slug")
           cat-slug (get-query-param query "category")
           conn (<! (:conn-ch db))
