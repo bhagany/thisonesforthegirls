@@ -932,36 +932,43 @@
   [pages event]
   (go
     (let [{:keys [db]} pages
-          {:keys [email]} event
-          [err] (<! (db/transact!-ch
-                     db
-                     [{:db/id -1
-                       :db/ident :contact
-                       :contact/email email}]))]
-      (if err
-        (js/Error. err)
-        (.stringify
-         js/JSON (clj->js {:success
-                           "The contact email was successfully updated"}))))))
+          {:keys [email]} event]
+      (if (empty? email)
+        (js/Error. "Please fill out all the fields")
+        (let [[err] (<! (db/transact!-ch
+                         db
+                         [{:db/id -1
+                           :db/ident :contact
+                           :contact/email email}]))]
+          (if err
+            (js/Error. err)
+            (.stringify
+             js/JSON (clj->js
+                      {:success
+                       "The contact email was successfully updated"}))))))))
 
 (defn edit-basic
   [ident gen-fn]
   (fn [pages event]
     (go
       (let [{:keys [db]} pages
-            {:keys [text]} event
-            [err] (<! (db/transact!-ch
-                       db
-                       [{:db/id -1
-                         :db/ident ident
-                         :page/text text}]))]
-        (if err
-          (js/Error. err)
-          (<! (generate-pages
-               pages
-               [gen-fn]
-               (.stringify
-                js/JSON (clj->js {:success "The text was successfully edited"})))))))))
+            {:keys [text]} event]
+        (if (empty? text)
+          (js/Error. "Please fill out all the fields")
+          (let [[err] (<! (db/transact!-ch
+                           db
+                           [{:db/id -1
+                             :db/ident ident
+                             :page/text text}]))]
+            (if err
+              (js/Error. err)
+              (<! (generate-pages
+                   pages
+                   [gen-fn]
+                   (.stringify
+                    js/JSON
+                    (clj->js
+                     {:success "The text was successfully edited"})))))))))))
 
 (def edit-home (edit-basic :home home))
 
@@ -973,58 +980,64 @@
   [pages event]
   (go
     (let [{:keys [db]} pages
-          {:keys [title author devotion]} event
-          conn (<! (:conn-ch db))
-          featured-devotions (d/q '[:find [?e ...]
-                                    :where [?e :devotion/featured? true]]
-                                  @conn)
-          tx (mapv (fn [d-id] {:db/id d-id :devotion/featured? false})
-                   featured-devotions)
-          slug (str/slugify title)
-          [err] (<! (db/transact!-ch
-                     db
-                     (into tx [{:db/id -1
-                                :devotion/author author
-                                :devotion/title title
-                                :devotion/slug slug
-                                :devotion/body devotion
-                                :devotion/created-at (js/Date.)
-                                :devotion/featured? true}])))]
-      (if err
-        (js/Error. err)
-        (<! (generate-pages
-             pages
-             [featured-devotion
-              archived-devotions]
-             (.stringify
-              js/JSON (clj->js {:success "The devotion was successfully added"
-                                :redirect "/admin/devotions"}))))))))
+          {:keys [title author devotion]} event]
+      (if (some empty? [title author devotion])
+        (js/Error. "Please fill out all the fields")
+        (let [conn (<! (:conn-ch db))
+              featured-devotions (d/q '[:find [?e ...]
+                                        :where [?e :devotion/featured? true]]
+                                      @conn)
+              tx (mapv (fn [d-id] {:db/id d-id :devotion/featured? false})
+                       featured-devotions)
+              slug (str/slugify title)
+              [err] (<! (db/transact!-ch
+                         db
+                         (into tx [{:db/id -1
+                                    :devotion/author author
+                                    :devotion/title title
+                                    :devotion/slug slug
+                                    :devotion/body devotion
+                                    :devotion/created-at (js/Date.)
+                                    :devotion/featured? true}])))]
+          (if err
+            (js/Error. err)
+            (<! (generate-pages
+                 pages
+                 [featured-devotion
+                  archived-devotions]
+                 (.stringify
+                  js/JSON (clj->js
+                           {:success "The devotion was successfully added"
+                            :redirect "/admin/devotions"}))))))))))
 
 (defn edit-devotion
   [pages event]
   (go
     (let [{:keys [db]} pages
-          {:keys [query title author devotion]} event
-          old-slug (get-query-param query "slug")
-          slug (str/slugify title)
-          [err] (if old-slug
-                  (<! (db/transact!-ch
-                       db
-                       [{:db/id [:devotion/slug old-slug]
-                         :devotion/author author
-                         :devotion/title title
-                         :devotion/slug slug
-                         :devotion/body devotion}]))
-                  ["Invalid slug"])]
-      (if err
-        (js/Error. err)
-        (<! (generate-pages
-             pages
-             [featured-devotion
-              archived-devotions]
-             (.stringify
-              js/JSON (clj->js {:success "The devotion was successfully edited"
-                                :redirect "/admin/devotions"}))))))))
+          {:keys [query title author devotion]} event]
+      (if (some empty? [title author devotion])
+        (js/Error. "Please fill out all the fields")
+        (let [old-slug (get-query-param query "slug")
+              slug (str/slugify title)
+              [err] (if old-slug
+                      (<! (db/transact!-ch
+                           db
+                           [{:db/id [:devotion/slug old-slug]
+                             :devotion/author author
+                             :devotion/title title
+                             :devotion/slug slug
+                             :devotion/body devotion}]))
+                      ["Invalid slug"])]
+          (if err
+            (js/Error. err)
+            (<! (generate-pages
+                 pages
+                 [featured-devotion
+                  archived-devotions]
+                 (.stringify
+                  js/JSON (clj->js
+                           {:success "The devotion was successfully edited"
+                            :redirect "/admin/devotions"}))))))))))
 
 (defn delete-devotion
   [pages event]
@@ -1072,53 +1085,59 @@
   [pages event]
   (go
     (let [{:keys [db]} pages
-          {:keys [title body]} event
-          conn (<! (:conn-ch db))
-          slug (str/slugify title)
-          entity {:testimony/title title
-                  :testimony/slug slug
-                  :testimony/body body}
-          [err] (<! (db/transact!-ch
-                     db
-                     [(assoc entity :db/id -1)]))]
-      (if err
-        (js/Error. err)
-        (<! (generate-pages
-             pages
-             [testimonies
-              (testimony entity)]
-             (.stringify
-              js/JSON (clj->js {:success "The testimony was successfully added"
-                                :redirect "/admin/testimonies"}))))))))
-
-(defn edit-testimony
-  [pages event]
-  (go
-    (let [{:keys [db]} pages
-          {:keys [query title body]} event
-          old-slug (get-query-param query "slug")
-          slug (str/slugify title)
-          entity {:testimony/title title
-                  :testimony/slug slug
-                  :testimony/body body}
-          [err] (if old-slug
-                  (<! (db/transact!-ch
-                       db
-                       [(assoc entity :db/id [:testimony/slug old-slug])]))
-                  ["Invalid slug"])]
-      (if err
-        (js/Error. err)
-        (let [[del-err] (<! (delete-page pages (str "testimonies/" old-slug)))]
-          (if del-err
-            (js/Error. del-err)
+          {:keys [title body]} event]
+      (if (some empty? [title body])
+        (js/Error. "Please fill out all the fields")
+        (let [conn (<! (:conn-ch db))
+              slug (str/slugify title)
+              entity {:testimony/title title
+                      :testimony/slug slug
+                      :testimony/body body}
+              [err] (<! (db/transact!-ch
+                         db
+                         [(assoc entity :db/id -1)]))]
+          (if err
+            (js/Error. err)
             (<! (generate-pages
                  pages
                  [testimonies
                   (testimony entity)]
                  (.stringify
                   js/JSON (clj->js
-                           {:success "The testimony was successfully edited"
+                           {:success "The testimony was successfully added"
                             :redirect "/admin/testimonies"}))))))))))
+
+(defn edit-testimony
+  [pages event]
+  (go
+    (let [{:keys [db]} pages
+          {:keys [query title body]} event]
+      (if (some empty? [title body])
+        (js/Error. "Please fill out all the fields")
+        (let [old-slug (get-query-param query "slug")
+              slug (str/slugify title)
+              entity {:testimony/title title
+                      :testimony/slug slug
+                      :testimony/body body}
+              [err] (if old-slug
+                      (<! (db/transact!-ch
+                           db
+                           [(assoc entity :db/id [:testimony/slug old-slug])]))
+                      ["Invalid slug"])]
+          (if err
+            (js/Error. err)
+            (let [[del-err] (<! (delete-page pages
+                                             (str "testimonies/" old-slug)))]
+              (if del-err
+                (js/Error. del-err)
+                (<! (generate-pages
+                     pages
+                     [testimonies
+                      (testimony entity)]
+                     (.stringify
+                      js/JSON (clj->js
+                               {:success "The testimony was successfully edited"
+                                :redirect "/admin/testimonies"}))))))))))))
 
 (defn delete-testimony
   [pages event]
@@ -1149,60 +1168,66 @@
   [pages event]
   (go
     (let [{:keys [db]} pages
-          {:keys [name]} event
-          conn (<! (:conn-ch db))
-          slug (str/slugify name)
-          entity {:scripture-category/name name
-                  :scripture-category/slug slug}
-          [err] (<! (db/transact!-ch
-                     db
-                     [(assoc entity :db/id -1)]))]
-      (if err
-        (js/Error. err)
-        (<! (generate-pages
-             pages
-             [scripture-categories
-              (scripture-category entity)]
-             (.stringify
-              js/JSON
-              (clj->js
-               {:success "The scripture category was successfully added"
-                :redirect "/admin/scripture/categories"}))))))))
+          {:keys [name]} event]
+      (if (empty? name)
+        (js/Error. "Please fill out all the fields")
+        (let [conn (<! (:conn-ch db))
+              slug (str/slugify name)
+              entity {:scripture-category/name name
+                      :scripture-category/slug slug}
+              [err] (<! (db/transact!-ch
+                         db
+                         [(assoc entity :db/id -1)]))]
+          (if err
+            (js/Error. err)
+            (<! (generate-pages
+                 pages
+                 [scripture-categories
+                  (scripture-category entity)]
+                 (.stringify
+                  js/JSON
+                  (clj->js
+                   {:success "The scripture category was successfully added"
+                    :redirect "/admin/scripture/categories"}))))))))))
 
 (defn edit-scripture-category
   [pages event]
   (go
     (let [{:keys [db]} pages
-          {:keys [query name]} event
-          old-slug (get-query-param query "slug")
-          slug (str/slugify name)
-          [err tx-info] (if old-slug
-                          (<! (db/transact!-ch
-                               db
-                               [{:db/id [:scripture-category/slug old-slug]
-                                 :scripture-category/name name
-                                 :scripture-category/slug slug}]))
-                          ["Invalid slug"])]
-      (if err
-        (js/Error. err)
-        (let [[del-err] (<! (delete-page pages (str "scripture/" old-slug)))]
-          (if del-err
-            (js/Error. del-err)
-            (let [entity (d/q '[:find (pull
-                                       ?e
-                                       [* {:scripture/_category [*]}]) .
-                                :in $ ?e]
-                              (:db-after tx-info)
-                              [:scripture-category/slug slug])]
-              (<! (generate-pages
-                   pages
-                   [scripture-categories
-                    (scripture-category entity)]
-                   (.stringify
-                    js/JSON
-                    (clj->js
-                     {:success "The scripture category was successfully edited"
-                      :redirect "/admin/scripture/categories"})))))))))))
+          {:keys [query name]} event]
+      (if (empty? name)
+        (js/Error. "Please fill out all the fields")
+        (let [old-slug (get-query-param query "slug")
+              slug (str/slugify name)
+              [err tx-info] (if old-slug
+                              (<! (db/transact!-ch
+                                   db
+                                   [{:db/id [:scripture-category/slug old-slug]
+                                     :scripture-category/name name
+                                     :scripture-category/slug slug}]))
+                              ["Invalid slug"])]
+          (if err
+            (js/Error. err)
+            (let [[del-err] (<! (delete-page pages (str "scripture/"
+                                                        old-slug)))]
+              (if del-err
+                (js/Error. del-err)
+                (let [entity (d/q '[:find (pull
+                                           ?e
+                                           [* {:scripture/_category [*]}]) .
+                                    :in $ ?e]
+                                  (:db-after tx-info)
+                                  [:scripture-category/slug slug])]
+                  (<!
+                   (generate-pages
+                    pages
+                    [scripture-categories
+                     (scripture-category entity)]
+                    (.stringify
+                     js/JSON
+                     (clj->js
+                      {:success "The scripture category was successfully edited"
+                       :redirect "/admin/scripture/categories"})))))))))))))
 
 (defn delete-scripture-category
   [pages event]
@@ -1236,64 +1261,73 @@
   [pages event]
   (go
     (let [{:keys [db]} pages
-          {:keys [query reference text]} event
-          conn (<! (:conn-ch db))
-          slug (str/slugify reference)
-          cat-slug (get-query-param query "category")
-          [err tx-info] (<! (db/transact!-ch
-                             db
-                             [{:db/id -1
-                               :scripture/reference reference
-                               :scripture/text text
-                               :scripture/slug slug
-                               :scripture/category [:scripture-category/slug
-                                                    cat-slug]}]))
-          category (scripture-category-by-slug (:db-after tx-info) cat-slug)]
-      (if err
-        (js/Error. err)
-        (<! (generate-pages
-             pages
-             [scripture-categories
-              (scripture-category category)]
-             (.stringify
-              js/JSON
-              (clj->js {:success "The scripture was successfully added"
-                        :redirect (str "/admin/scripture/categories/edit?slug="
-                                       cat-slug)}))))))))
+          {:keys [query reference text]} event]
+      (if (some empty? [reference text])
+        (js/Error. "Please fill out all the fields")
+        (let [conn (<! (:conn-ch db))
+              slug (str/slugify reference)
+              cat-slug (get-query-param query "category")
+              [err tx-info] (<! (db/transact!-ch
+                                 db
+                                 [{:db/id -1
+                                   :scripture/reference reference
+                                   :scripture/text text
+                                   :scripture/slug slug
+                                   :scripture/category
+                                   [:scripture-category/slug
+                                    cat-slug]}]))
+              category (scripture-category-by-slug (:db-after tx-info)
+                                                   cat-slug)]
+          (if err
+            (js/Error. err)
+            (<! (generate-pages
+                 pages
+                 [scripture-categories
+                  (scripture-category category)]
+                 (.stringify
+                  js/JSON
+                  (clj->js
+                   {:success "The scripture was successfully added"
+                    :redirect (str "/admin/scripture/categories/edit?slug="
+                                   cat-slug)}))))))))))
 
 (defn edit-scripture
   [pages event]
   (go
     (let [{:keys [db]} pages
-          {:keys [query reference text]} event
-          old-slug (get-query-param query "slug")
-          cat-slug (get-query-param query "category")
-          slug (str/slugify reference)
-          [err tx-info] (if old-slug
-                          (<! (db/transact!-ch
-                               db
-                               [{:db/id [:scripture/slug old-slug]
-                                 :scripture/text text
-                                 :scripture/slug slug
-                                 :scripture/category [:scripture-category/slug
-                                                      cat-slug]}]))
-                          ["Invalid slug"])]
-      (if err
-        (js/Error. err)
-        (let [entity (d/q '[:find (pull
-                                   ?e
-                                   [* {:scripture/_category [*]}]) .
-                            :in $ ?e]
-                          (:db-after tx-info)
-                          [:scripture-category/slug cat-slug])]
-          (<! (generate-pages
-               pages
-               [(scripture-category entity)]
-               (.stringify
-                js/JSON
-                (clj->js {:success "The scripture was successfully edited"
-                          :redirect (str "/admin/scripture/categories/edit"
-                                         "?slug=" cat-slug)})))))))))
+          {:keys [query reference text]} event]
+      (if (some empty? [reference text])
+        (js/Error. "Please fill out all the fields")
+        (let [old-slug (get-query-param query "slug")
+              cat-slug (get-query-param query "category")
+              slug (str/slugify reference)
+              [err tx-info] (if old-slug
+                              (<! (db/transact!-ch
+                                   db
+                                   [{:db/id [:scripture/slug old-slug]
+                                     :scripture/text text
+                                     :scripture/slug slug
+                                     :scripture/category
+                                     [:scripture-category/slug
+                                      cat-slug]}]))
+                              ["Invalid slug"])]
+          (if err
+            (js/Error. err)
+            (let [entity (d/q '[:find (pull
+                                       ?e
+                                       [* {:scripture/_category [*]}]) .
+                                :in $ ?e]
+                              (:db-after tx-info)
+                              [:scripture-category/slug cat-slug])]
+              (<! (generate-pages
+                   pages
+                   [(scripture-category entity)]
+                   (.stringify
+                    js/JSON
+                    (clj->js
+                     {:success "The scripture was successfully edited"
+                      :redirect (str "/admin/scripture/categories/edit"
+                                     "?slug=" cat-slug)})))))))))))
 
 (defn delete-scripture
   [pages event]

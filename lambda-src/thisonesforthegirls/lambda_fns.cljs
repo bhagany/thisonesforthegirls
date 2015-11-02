@@ -87,15 +87,17 @@
           bcrypt (node/require "bcryptjs")
           hashed (.hashSync bcrypt password 10)]
       (go
-        (let [[err] (<! (db/transact!-ch
-                         db
-                         [{:db/id -1
-                           :db/ident :admin
-                           :user/name username
-                           :user/password hashed}]))]
-          (if err
-            (js/Error. err)
-            "Credentials set"))))))
+        (if (some empty? [username password])
+          (js/Error. "Please fill out all the fields")
+          (let [[err] (<! (db/transact!-ch
+                           db
+                           [{:db/id -1
+                             :db/ident :admin
+                             :user/name username
+                             :user/password hashed}]))]
+            (if err
+              (js/Error. err)
+              "Credentials set")))))))
 
 (defn set-token-secret
   [lambda-fns]
@@ -103,14 +105,16 @@
     (let [{:keys [secret]} event
           {:keys [db]} lambda-fns]
       (go
-        (let [[err] (<! (db/transact!-ch
-                         db
-                         [{:db/id -1
-                           :db/ident :secret
-                           :secret secret}]))]
-          (if err
-            (js/Error. err)
-            "Secret set"))))))
+        (if (empty? secret)
+          (js/Error. "Please fill out all the fields")
+          (let [[err] (<! (db/transact!-ch
+                           db
+                           [{:db/id -1
+                             :db/ident :secret
+                             :secret secret}]))]
+            (if err
+              (js/Error. err)
+              "Secret set")))))))
 
 (defn generate-all-pages
   [lambda-fns]
@@ -139,25 +143,28 @@
           {:keys [db]} lambda-fns
           bcrypt (node/require "bcryptjs")]
       (go
-        (let [conn (<! (:conn-ch db))
-              stored-hash (or (d/q '[:find ?password .
-                                     :in $ ?username
-                                     :where
-                                     [?e :db/ident :admin]
-                                     [?e :user/name ?username]
-                                     [?e :user/password ?password]]
-                                   @conn
-                                   username)
-                              "")]
-          (cond
-            (some nil? [username password]) (js/Error. "Creds missing")
-            (.compareSync bcrypt
-                          password
-                          stored-hash) (.stringify
-                                        js/JSON
-                                        (clj->js
-                                         {:jwt (make-login-token @conn)}))
-            :else (js/Error. "Wrong username or password")))))))
+        (if (some empty? [username password])
+          (js/Error. "Please fill out all the fields")
+          (let [conn (<! (:conn-ch db))
+                stored-hash (or (d/q '[:find ?password .
+                                       :in $ ?username
+                                       :where
+                                       [?e :db/ident :admin]
+                                       [?e :user/name ?username]
+                                       [?e :user/password ?password]]
+                                     @conn
+                                     username)
+                                "")]
+            (cond
+              (some empty? [username password]) (js/Error. "Creds missing")
+              (.compareSync bcrypt
+                            password
+                            stored-hash) (.stringify
+                                          js/JSON
+                                          (clj->js
+                                           {:jwt (make-login-token @conn)}))
+                            :else (js/Error.
+                                   "Wrong username or password"))))))))
 
 (defn admin-page
   [lambda-fns]
