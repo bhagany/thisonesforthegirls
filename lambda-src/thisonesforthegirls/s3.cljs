@@ -1,5 +1,5 @@
 (ns thisonesforthegirls.s3
-  (:require [cljs.core.async :refer [promise-chan >!]]
+  (:require [cljs.core.async :refer [chan >! close!]]
             [cljs.nodejs :as node]
             [com.stuartsierra.component :as component])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -26,30 +26,36 @@
 
   S3
   (get-obj-ch [_ bucket key-name]
-    (let [ch (promise-chan)]
+    (let [ch (chan)]
       (.getObject conn
                   #js {:Bucket bucket
                        :Key key-name}
                   (fn [err obj]
-                    (go (>! ch [err obj]))))
+                    (go
+                      (>! ch [err obj])
+                      (close! ch))))
       ch))
   (put-obj!-ch [this bucket key-name body]
     (put-obj!-ch this bucket key-name body {}))
   (put-obj!-ch [_ bucket key-name body options]
-    (let [ch (promise-chan)
+    (let [ch (chan)
           params (merge options {:Bucket bucket :Key key-name :Body body})]
       (.putObject conn
                   (clj->js params)
                   (fn [err obj]
-                    (go (>! ch [err obj]))))
+                    (go
+                      (>! ch [err obj])
+                      (close! ch))))
       ch))
   (delete-obj!-ch [_ bucket key-name]
-    (let [ch (promise-chan)
+    (let [ch (chan)
           params #js {:Bucket bucket :Key key-name}]
       (.deleteObject conn
                      params
                      (fn [err obj]
-                       (go (>! ch [err obj]))))
+                       (go
+                         (>! ch [err obj])
+                         (close! ch))))
       ch)))
 
 (defn s3-connection

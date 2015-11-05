@@ -1,5 +1,5 @@
 (ns thisonesforthegirls.s3-dev
-  (:require [cljs.core.async :refer [promise-chan >!]]
+  (:require [cljs.core.async :refer [chan >! close!]]
             [cljs.nodejs :as node]
             [clojure.string :as s]
             [com.stuartsierra.component :as component]
@@ -9,7 +9,7 @@
 (defrecord S3DevConn [conn]
   s3/S3
   (get-obj-ch [_ bucket key-name]
-    (let [ch (promise-chan)
+    (let [ch (chan)
           fs (node/require "fs")
           filename (str bucket "/" (s/replace key-name "/" "___"))]
       (go
@@ -19,10 +19,11 @@
             ;; http://dev.clojure.org/jira/browse/ASYNC-117
             (>! ch [nil (clj->js {:Body body})]))
           (catch js/Object e
-            (>! ch [e nil]))))
+            (>! ch [e nil])))
+        (close! ch))
       ch))
   (put-obj!-ch [_ bucket key-name body]
-    (let [ch (promise-chan)
+    (let [ch (chan)
           fs (node/require "fs")
           filename (str bucket "/" (s/replace key-name "/" "___"))]
       (try
@@ -37,12 +38,13 @@
             (.writeFileSync fs filename body "utf8")
             (>! ch [nil "that totally worked"]))
           (catch :default e
-            (>! ch [e nil]))))
+            (>! ch [e nil])))
+        (close! ch))
       ch))
   (put-obj!-ch [this bucket key-name body _]
     (s3/put-obj!-ch this bucket key-name body))
   (delete-obj!-ch [_ bucket key-name]
-    (let [ch (promise-chan)
+    (let [ch (chan)
           fs (node/require "fs")
           filename (str bucket "/" (s/replace key-name "/" "___"))
           resp (try
@@ -51,7 +53,9 @@
                    [nil "that totally worked"])
                  (catch :default e
                    [e nil]))]
-      (go (>! ch resp))
+      (go
+        (>! ch resp)
+        (close! ch))
       ch)))
 
 (defn s3-dev-connection
