@@ -160,10 +160,8 @@
               (some empty? [username password]) (js/Error. "Creds missing")
               (.compareSync bcrypt
                             password
-                            stored-hash) (.stringify
-                                          js/JSON
-                                          (clj->js
-                                           {:jwt (make-login-token @conn)}))
+                            stored-hash) (clj->js
+                                          {:jwt (make-login-token @conn)})
                             :else (js/Error.
                                    "Wrong username or password"))))))))
 
@@ -176,9 +174,9 @@
             {:keys [pages db]} lambda-fns
             conn (<! (:conn-ch db))]
         ;; check token, return login form if bad
-        (if (check-login-token @conn jwt)
-          (<! (admin-page-router pages path query))
-          (p/login-form pages))))))
+        {:content (if (check-login-token @conn jwt)
+                    (<! (admin-page-router pages path query))
+                    (p/login-form pages))}))))
 
 (defn edit-page
   [lambda-fns]
@@ -247,5 +245,5 @@
                                         message))]
             (if err
               (js/Error. err)
-              (.stringify js/JSON (clj->js {:success "Your message was sent"
-                                            :redirect "/contact"})))))))))
+              (clj->js {:success "Your message was sent"
+                        :redirect "/contact"}))))))))

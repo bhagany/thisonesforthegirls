@@ -31,12 +31,13 @@
   [page-url]
   (let [xhr-json (.stringify js/JSON (clj->js {:page-info (path-and-query)}))
         jwt (cookies/get "jwt")
-        headers (if jwt
-                  #js {:x-jwt jwt}
-                  #js {})]
+        headers (cond-> {:Content-Type "application/json"}
+                  jwt (assoc :x-jwt jwt)
+                  true clj->js)]
     (letfn [(cb [response]
               (let [frag (dom/htmlToDocumentFragment
-                          (.getResponseText (.-target response)))
+                          (gobj/get (.getResponseJson (.-target response))
+                                    "content"))
                     node (.getElementById js/document "admin")]
                 (.appendChild node frag)
                 (when-let [message (cookies/get "message")]
@@ -80,9 +81,9 @@
                   (let [action (.getAttribute form "action")
                         form-data (f/getFormDataMap form)
                         jwt (cookies/get "jwt")
-                        headers (if jwt
-                                  #js {:x-jwt jwt}
-                                  #js {})
+                        headers (cond-> {:Content-Type "application/json"}
+                                  jwt (assoc :x-jwt jwt)
+                                  true clj->js)
                         form-data (->> (.-map_ form-data)
                                        js->clj
                                        (map (fn [[k v]] [k (v 0)]))

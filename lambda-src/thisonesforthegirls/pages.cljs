@@ -942,10 +942,8 @@
                            :contact/email email}]))]
           (if err
             (js/Error. err)
-            (.stringify
-             js/JSON (clj->js
-                      {:success
-                       "The contact email was successfully updated"}))))))))
+            {:success
+             "The contact email was successfully updated"}))))))
 
 (defn edit-basic
   [ident gen-fn]
@@ -965,10 +963,7 @@
               (<! (generate-pages
                    pages
                    [gen-fn]
-                   (.stringify
-                    js/JSON
-                    (clj->js
-                     {:success "The text was successfully edited"})))))))))))
+                   {:success "The text was successfully edited"})))))))))
 
 (def edit-home (edit-basic :home home))
 
@@ -1005,10 +1000,8 @@
                  pages
                  [featured-devotion
                   archived-devotions]
-                 (.stringify
-                  js/JSON (clj->js
-                           {:success "The devotion was successfully added"
-                            :redirect "/admin/devotions"}))))))))))
+                 {:success "The devotion was successfully added"
+                  :redirect "/admin/devotions"}))))))))
 
 (defn edit-devotion
   [pages form]
@@ -1034,10 +1027,8 @@
                  pages
                  [featured-devotion
                   archived-devotions]
-                 (.stringify
-                  js/JSON (clj->js
-                           {:success "The devotion was successfully edited"
-                            :redirect "/admin/devotions"}))))))))))
+                 {:success "The devotion was successfully edited"
+                  :redirect "/admin/devotions"}))))))))
 
 (defn delete-devotion
   [pages form]
@@ -1076,10 +1067,8 @@
              pages
              [featured-devotion
               archived-devotions]
-             (.stringify
-              js/JSON (clj->js
-                       {:success "The devotion was successfully deleted"
-                        :redirect "/admin/devotions"}))))))))
+             {:success "The devotion was successfully deleted"
+              :redirect "/admin/devotions"}))))))
 
 (defn add-testimony
   [pages form]
@@ -1102,10 +1091,8 @@
                  pages
                  [testimonies
                   (testimony entity)]
-                 (.stringify
-                  js/JSON (clj->js
-                           {:success "The testimony was successfully added"
-                            :redirect "/admin/testimonies"}))))))))))
+                 {:success "The testimony was successfully added"
+                  :redirect "/admin/testimonies"}))))))))
 
 (defn edit-testimony
   [pages form]
@@ -1134,10 +1121,8 @@
                      pages
                      [testimonies
                       (testimony entity)]
-                     (.stringify
-                      js/JSON (clj->js
-                               {:success "The testimony was successfully edited"
-                                :redirect "/admin/testimonies"}))))))))))))
+                     {:success "The testimony was successfully edited"
+                      :redirect "/admin/testimonies"}))))))))))
 
 (defn delete-testimony
   [pages form]
@@ -1157,10 +1142,8 @@
             (<! (generate-pages
                  pages
                  [testimonies]
-                 (.stringify
-                  js/JSON (clj->js
-                           {:success "The testimony was successfully deleted"
-                            :redirect "/admin/testimonies"}))))))))))
+                 {:success "The testimony was successfully deleted"
+                  :redirect "/admin/testimonies"}))))))))
 
 ;; Scripture Categories
 
@@ -1184,11 +1167,8 @@
                  pages
                  [scripture-categories
                   (scripture-category entity)]
-                 (.stringify
-                  js/JSON
-                  (clj->js
-                   {:success "The scripture category was successfully added"
-                    :redirect "/admin/scripture/categories"}))))))))))
+                 {:success "The scripture category was successfully added"
+                  :redirect "/admin/scripture/categories"}))))))))
 
 (defn edit-scripture-category
   [pages form]
@@ -1223,11 +1203,8 @@
                     pages
                     [scripture-categories
                      (scripture-category entity)]
-                    (.stringify
-                     js/JSON
-                     (clj->js
-                      {:success "The scripture category was successfully edited"
-                       :redirect "/admin/scripture/categories"})))))))))))))
+                    {:success "The scripture category was successfully edited"
+                     :redirect "/admin/scripture/categories"})))))))))))
 
 (defn delete-scripture-category
   [pages form]
@@ -1249,11 +1226,8 @@
              (generate-pages
               pages
               [scripture-categories]
-              (.stringify
-               js/JSON
-               (clj->js
-                {:success "The scripture category was successfully deleted"
-                 :redirect "/admin/scripture/categories"}))))))))))
+              {:success "The scripture category was successfully deleted"
+               :redirect "/admin/scripture/categories"}))))))))
 
 ;; Scripture
 
@@ -1284,12 +1258,9 @@
                  pages
                  [scripture-categories
                   (scripture-category category)]
-                 (.stringify
-                  js/JSON
-                  (clj->js
-                   {:success "The scripture was successfully added"
-                    :redirect (str "/admin/scripture/categories/edit?slug="
-                                   cat-slug)}))))))))))
+                 {:success "The scripture was successfully added"
+                  :redirect (str "/admin/scripture/categories/edit?slug="
+                                 cat-slug)}))))))))
 
 (defn edit-scripture
   [pages form]
@@ -1322,12 +1293,9 @@
               (<! (generate-pages
                    pages
                    [(scripture-category entity)]
-                   (.stringify
-                    js/JSON
-                    (clj->js
-                     {:success "The scripture was successfully edited"
-                      :redirect (str "/admin/scripture/categories/edit"
-                                     "?slug=" cat-slug)})))))))))))
+                   {:success "The scripture was successfully edited"
+                    :redirect (str "/admin/scripture/categories/edit"
+                                   "?slug=" cat-slug)})))))))))
 
 (defn delete-scripture
   [pages form]
@@ -1352,8 +1320,6 @@
           (<! (generate-pages
                pages
                [(scripture-category entity)]
-               (.stringify
-                js/JSON
-                (clj->js {:success "The scripture was successfully deleted"
-                          :redirect (str "/admin/scripture/categories/edit"
-                                         "?slug=" cat-slug)})))))))))
+               {:success "The scripture was successfully deleted"
+                :redirect (str "/admin/scripture/categories/edit"
+                               "?slug=" cat-slug)})))))))

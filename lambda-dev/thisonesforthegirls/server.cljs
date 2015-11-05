@@ -38,7 +38,7 @@
                      (clj->js {:errorMessage (.-message result)
                                :errorType (.. result -constructor -name)
                                :stackTrace (.-stack result)}))))
-            (.end response result)))))))
+            (.end response (.stringify js/JSON (clj->js result)))))))))
 
 (defn static-headers
   [response path]
