@@ -126,10 +126,10 @@
                           merge)
               error (loop []
                       (let [[err :as val] (<! put-ch)]
-                        (when err
-                          (js/Error. err))
-                        (when-not (nil? val)
-                          (recur))))]
+                        (if err
+                          (js/Error. err)
+                          (when-not (nil? val)
+                            (recur)))))]
           (if error
             error
             "success"))))))
