@@ -447,10 +447,10 @@
           email (-> '[:find ?email .
                       :in $ ?contact
                       :where [?contact :contact/email ?email]]
-                    (d/q @conn [:db/ident :contact])
-                    gs/htmlEscape)]
+                    (d/q @conn [:db/ident :contact]))]
       (html
-       [:img.header {:src "/assets/contact-us.gif" :alt "Contact Us"}]
+       [:a {:href "/admin/contact"}
+        [:img.header {:src "/assets/contact-us.gif" :alt "Contact Us"}]]
        [:p#error]
        [:h2#success]
        [:form {:action (str lambda-base "edit-page") :method "post"}
@@ -462,14 +462,14 @@
        admin-footer))))
 
 (defn admin-basic
-  [ident header-img text-label]
+  [ident header-img header-uri text-label]
   (fn [pages]
     (go
       (let [{:keys [lambda-base db]} pages
             conn (<! (:conn-ch db))
             text (gs/htmlEscape (d/q text-query @conn [:db/ident ident]))]
         (html
-         [:img.header header-img]
+         [:a {:href header-uri} [:img.header header-img]]
          [:p#error]
          [:h2#success]
          [:form {:action (str lambda-base "edit-page") :method "post"}
@@ -482,15 +482,18 @@
 
 (def admin-home (admin-basic :home
                              {:src "/assets/welcome.gif" :alt "Welcome"}
+                             "/admin/welcome"
                              "Welcome Message"))
 
 (def admin-about-us (admin-basic :about-us
                                  {:src "/assets/about-us.gif" :alt "About Us"}
+                                 "/admin/about"
                                  "About Us Text"))
 
 (def admin-resources (admin-basic :resources
                                   {:src "/assets/community-resources.gif"
                                    :alt "Community Resources"}
+                                  "/admin/community-resources"
                                   "Community Resources Text"))
 
 ;; Devotions
@@ -511,7 +514,8 @@
                                 :where [?e :devotion/featured?]] @conn)
                          (sort-by :devotion/created-at #(compare %2 %1)))]
       (html
-       [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
+       [:a {:href "/admin/devotions"}
+        [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]]
        [:h2#success]
        [:ul (map admin-devotion-li devotions)]
        [:p [:a {:href "/admin/devotions/add"} "Add a new Devotion"]]
@@ -526,7 +530,8 @@
          author (gs/htmlEscape (:devotion/author devotion))
          body (gs/htmlEscape (:devotion/body devotion))]
      (html
-      [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
+      [:a {:href "/admin/devotions"}
+       [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]]
       [:p#error]
       [:h2#success]
       [:form {:action (str lambda-base "edit-page") :method "post"}
@@ -581,7 +586,8 @@
       (if (and slug devotion)
         (let [title (gs/htmlEscape (:devotion/title devotion))]
           (html
-           [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]
+           [:a {:href "/admin/devotions"}
+            [:img.header {:src "/assets/devotions.gif" :alt "Devotions"}]]
            [:p#error]
            [:h2#success]
            [:h2 (str "Do you want to delete \"" title "\"?")]
@@ -613,7 +619,8 @@
                                   :where [?e :testimony/title]] @conn)
                            (sort-by :testimony/title))]
       (html
-       [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]
+       [:a {:href "/admin/testimonies"}
+        [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]]
        [:h2#success]
        [:ul (map admin-testimony-li testimonies)]
        [:p [:a {:href "/admin/testimonies/add"} "Add a new Testimony"]]
@@ -627,7 +634,8 @@
          title (gs/htmlEscape (:testimony/title testimony))
          body (gs/htmlEscape (:testimony/body testimony))]
      (html
-      [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]
+      [:a {:href "/admin/testimonies"}
+       [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]]
       [:p#error]
       [:h2#success]
       [:form {:action (str lambda-base "edit-page") :method "post"}
@@ -680,7 +688,8 @@
       (if (and slug testimony)
         (let [title (gs/htmlEscape (:testimony/title testimony))]
           (html
-           [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]
+           [:a {:href "/admin/testimonies"}
+            [:img.header {:src "/assets/testimonies.gif" :alt "Testimonies"}]]
            [:p#error]
            [:h2#success]
            [:h2 (str "Do you want to delete \"" title "\"?")]
@@ -712,7 +721,8 @@
                                  :where [?e :scripture-category/name]] @conn)
                           (sort-by :scripture-category/name))]
       (html
-       [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
+       [:a {:href "/admin/scripture/categories"}
+        [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]]
        [:h2#success]
        [:ul (map admin-scripture-category-li categories)]
        [:p [:a {:href "/admin/scripture/categories/add"}
@@ -732,9 +742,10 @@
    (admin-scripture-categories-template pages {}))
   ([pages category]
    (let [{:keys [lambda-base]} pages
-         name (gs/htmlEscape (:scripture-category/name category))]
+         name (:scripture-category/name category)]
      (html
-      [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
+      [:a {:href "/admin/scripture/categories"}
+       [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]]
       [:p#error]
       [:h2#success]
       [:form {:action (str lambda-base "edit-page") :method "post"}
@@ -794,7 +805,8 @@
       (if (and slug category)
         (let [name (gs/htmlEscape (:scripture-category/name category))]
           (html
-           [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
+           [:a {:href "/admin/scripture/categories"}
+            [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]]
            [:p#error]
            [:h2#success]
            [:h2 (str "Do you want to delete \"" name "\"?")]
@@ -813,10 +825,11 @@
    (admin-scripture-template pages {}))
   ([pages scripture]
    (let [{:keys [lambda-base]} pages
-         reference (gs/htmlEscape (:scripture/reference scripture))
+         reference (:scripture/reference scripture)
          text (gs/htmlEscape (:scripture/text scripture))]
      (html
-      [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
+      [:a {:href "/admin/scripture/categories"}
+       [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]]
       [:p#error]
       [:h2#success]
       [:form {:action (str lambda-base "edit-page") :method "post"}
@@ -876,7 +889,8 @@
       (if (and slug cat-slug scripture)
         (let [reference (gs/htmlEscape (:scripture/reference scripture))]
           (html
-           [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]
+           [:a {:href "/admin/scripture/categories"}
+            [:img.header {:src "/assets/scripture.gif" :alt "Scripture"}]]
            [:p#error]
            [:h2#success]
            [:h2 (str "Do you want to delete \"" reference "\"?")]
