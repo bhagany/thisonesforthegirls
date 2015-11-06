@@ -43,7 +43,7 @@
                 (when-let [message (cookies/get "message")]
                   (show-success message)
                   (cookies/remove "message" "/admin"))))]
-      (goog.net.XhrIo.send page-url cb "POST" xhr-json headers))))
+      (goog.net.XhrIo.send page-url cb "POST" xhr-json headers 60000))))
 
 (defn handle-ajax-response
   [action]
@@ -95,7 +95,8 @@
                                          (handle-ajax-response action)
                                          "POST"
                                          xhr-json
-                                         headers)))))]
+                                         headers
+                                         60000)))))]
       (e/listen body e/EventType.SUBMIT cb))))
 
 (defonce logout
