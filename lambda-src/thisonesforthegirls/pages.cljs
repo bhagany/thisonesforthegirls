@@ -82,7 +82,7 @@
   (base-template
    title
    [(into [:div#content] main-content)]
-   [[:script {:src "http://www.google-analytics.com/ga.js"
+   [[:script {:src "https://www.google-analytics.com/ga.js"
               :type "text/javascript"}]
     [:script {:type "text/javascript"}
      (str "try { _gat._getTracker(\"UA-8266354-4\");"
