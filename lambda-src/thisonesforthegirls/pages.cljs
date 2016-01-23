@@ -16,6 +16,11 @@
 
 ;; Templates and helpers
 
+(defn escape-curly
+  [s]
+  (when s
+    (s/escape s {"“" "\"", "”" "\"", "‘" "'", "’" "'", "," ","})))
+
 (defn base-template
   ([title main-content]
    (base-template title main-content []))
@@ -526,8 +531,8 @@
    (admin-devotions-template pages {}))
   ([pages devotion]
    (let [{:keys [lambda-base]} pages
-         title (gs/htmlEscape (:devotion/title devotion))
-         author (gs/htmlEscape (:devotion/author devotion))
+         title (:devotion/title devotion)
+         author (:devotion/author devotion)
          body (gs/htmlEscape (:devotion/body devotion))]
      (html
       [:a {:href "/admin/devotions"}
@@ -631,7 +636,7 @@
    (admin-testimonies-template pages {}))
   ([pages testimony]
    (let [{:keys [lambda-base]} pages
-         title (gs/htmlEscape (:testimony/title testimony))
+         title (:testimony/title testimony)
          body (gs/htmlEscape (:testimony/body testimony))]
      (html
       [:a {:href "/admin/testimonies"}
@@ -912,16 +917,14 @@
   (fn [{:keys [path content]}]
     (s3/put-obj!-ch (:s3-conn pages)
                     (:html-bucket pages) path content
-                    {:ContentLength (count content)
-                     :ContentType "text/html"})))
+                    {:ContentType "text/html"})))
 
 (defn generate-page
   [pages]
   (fn [gen-fn]
     (go
-      (let [{:keys [path content]} (<! (gen-fn pages))]
-        (<! ((page-info->put-ch pages)
-             {:path path :content content}))))))
+      (let [gen-data (<! (gen-fn pages))]
+        (<! ((page-info->put-ch pages) gen-data))))))
 
 (defn generate-pages
   [pages gen-fns success-msg]
@@ -929,10 +932,10 @@
     (let [put-ch (async/merge (map (generate-page pages) gen-fns))
           error (loop []
                   (let [[err :as val] (<! put-ch)]
-                    (when err
-                      (js/Error. err))
-                    (when-not (nil? val)
-                      (recur))))]
+                    (if err
+                      (js/Error. err)
+                      (when-not (nil? val)
+                        (recur)))))]
       (if error
         error
         success-msg))))
@@ -953,7 +956,7 @@
                          db
                          [{:db/id -1
                            :db/ident :contact
-                           :contact/email email}]))]
+                           :contact/email (escape-curly email)}]))]
           (if err
             (js/Error. err)
             {:success
@@ -971,7 +974,7 @@
                            db
                            [{:db/id -1
                              :db/ident ident
-                             :page/text text}]))]
+                             :page/text (escape-curly text)}]))]
             (if err
               (js/Error. err)
               (<! (generate-pages
@@ -1002,10 +1005,10 @@
               [err] (<! (db/transact!-ch
                          db
                          (into tx [{:db/id -1
-                                    :devotion/author author
-                                    :devotion/title title
+                                    :devotion/author (escape-curly author)
+                                    :devotion/title (escape-curly title)
                                     :devotion/slug slug
-                                    :devotion/body devotion
+                                    :devotion/body (escape-curly devotion)
                                     :devotion/created-at (js/Date.)
                                     :devotion/featured? true}])))]
           (if err
@@ -1030,10 +1033,10 @@
                       (<! (db/transact!-ch
                            db
                            [{:db/id [:devotion/slug old-slug]
-                             :devotion/author author
-                             :devotion/title title
+                             :devotion/author (escape-curly author)
+                             :devotion/title (escape-curly title)
                              :devotion/slug slug
-                             :devotion/body devotion}]))
+                             :devotion/body (escape-curly devotion)}]))
                       ["Invalid slug"])]
           (if err
             (js/Error. err)
@@ -1093,9 +1096,9 @@
         (js/Error. "Please fill out all the fields")
         (let [conn (<! (:conn-ch db))
               slug (str/slugify title)
-              entity {:testimony/title title
+              entity {:testimony/title (escape-curly title)
                       :testimony/slug slug
-                      :testimony/body body}
+                      :testimony/body (escape-curly body)}
               [err] (<! (db/transact!-ch
                          db
                          [(assoc entity :db/id -1)]))]
@@ -1117,9 +1120,9 @@
         (js/Error. "Please fill out all the fields")
         (let [old-slug (get-query-param query "slug")
               slug (str/slugify title)
-              entity {:testimony/title title
+              entity {:testimony/title (escape-curly title)
                       :testimony/slug slug
-                      :testimony/body body}
+                      :testimony/body (escape-curly body)}
               [err] (if old-slug
                       (<! (db/transact!-ch
                            db
@@ -1170,7 +1173,7 @@
         (js/Error. "Please fill out all the fields")
         (let [conn (<! (:conn-ch db))
               slug (str/slugify name)
-              entity {:scripture-category/name name
+              entity {:scripture-category/name (escape-curly name)
                       :scripture-category/slug slug}
               [err] (<! (db/transact!-ch
                          db
@@ -1197,7 +1200,7 @@
                               (<! (db/transact!-ch
                                    db
                                    [{:db/id [:scripture-category/slug old-slug]
-                                     :scripture-category/name name
+                                     :scripture-category/name (escape-curly name)
                                      :scripture-category/slug slug}]))
                               ["Invalid slug"])]
           (if err
@@ -1258,8 +1261,8 @@
               [err tx-info] (<! (db/transact!-ch
                                  db
                                  [{:db/id -1
-                                   :scripture/reference reference
-                                   :scripture/text text
+                                   :scripture/reference (escape-curly reference)
+                                   :scripture/text (escape-curly text)
                                    :scripture/slug slug
                                    :scripture/category
                                    [:scripture-category/slug
@@ -1290,7 +1293,7 @@
                               (<! (db/transact!-ch
                                    db
                                    [{:db/id [:scripture/slug old-slug]
-                                     :scripture/text text
+                                     :scripture/text (escape-curly text)
                                      :scripture/slug slug
                                      :scripture/category
                                      [:scripture-category/slug
