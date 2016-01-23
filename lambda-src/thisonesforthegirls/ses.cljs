@@ -28,7 +28,7 @@
                    {:Source from
                     :Destination {:ToAddresses [to]}
                     :ReplyToAddresses [reply-to]
-                    :Message {:Subject {:Data "From the sites Contact Us form"
+                    :Message {:Subject {:Data "From the site's Contact Us form"
                                         :Charset "utf-8"}
                               :Body {:Text {:Data message :Charset "utf-8"}}}})
                   (fn [err obj]

@@ -240,7 +240,7 @@
           (js/Error. "Please fill out all the fields")
           (let [[err] (<! (ses/send!-ch ses-conn
                                         "contact@thisonesforthegirls.org"
-                                        "thisonesforthegirls@gmail.com"
+                                        contact-email
                                         nice-reply-to
                                         message))]
             (if err
