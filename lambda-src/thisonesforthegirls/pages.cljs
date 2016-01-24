@@ -189,8 +189,10 @@
          [:dd [:textarea#body {:name "message" :rows "24"
                                :cols "80"}]]
          [:dt "&nbsp;"]
-         [:dd [:input#submit {:type "submit" :name "submit"
-                              :value "Submit"}]]]]]
+         [:dd
+          [:input#submit {:type "submit" :name "submit"
+                          :value "Submit"}]
+          [:img.spinner {:src "/assets/spinner.gif" :alt "Working..."}]]]]]
       [:script {:type "text/javascript" :src "/assets/js/contact.js"}]])))
 
 (def error-fragment
@@ -409,7 +411,9 @@
        [:dt [:label {:for "password"} "Password"]]
        [:dd [:input {:type "password" :name "password"}]]
        [:dt "&nbsp;"]
-       [:dd [:input {:type "submit" :value "Login"}]]]])))
+       [:dd
+        [:input {:type "submit" :value "Login"}]
+        [:img.spinner {:src "/assets/spinner.gif" :alt "Working..."}]]]])))
 
 ;; Admin page fragments
 
@@ -463,7 +467,9 @@
          [:dt [:label {:for "email"} "Contact Email"]]
          [:dd [:input {:type "text" :name "email" :value email}]]
          [:dt "&nbsp;"]
-         [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+         [:dd
+          [:input {:type "submit" :name "submit" :value "Submit"}]
+          [:img.spinner {:src "/assets/spinner.gif" :alt "Working..."}]]]]
        admin-footer))))
 
 (defn admin-basic
@@ -482,7 +488,9 @@
            [:dt [:label {:for "text"} text-label]]
            [:dd [:textarea {:name "text" :rows "24" :cols "80"} text]]
            [:dt "&nbsp;"]
-           [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+           [:dd
+            [:input {:type "submit" :name "submit" :value "Submit"}]
+            [:img.spinner {:src "/assets/spinner.gif" :alt "Working..."}]]]]
          admin-footer)))))
 
 (def admin-home (admin-basic :home
@@ -548,7 +556,9 @@
         [:dt [:label {:for "devotion"} "Devotion"]]
         [:dd [:textarea {:name "devotion" :rows "24" :cols "80"} body]]
         [:dt "&nbsp;"]
-        [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+        [:dd
+         [:input {:type "submit" :name "submit" :value "Submit"}]
+         [:img.spinner {:src "/assets/spinner.gif" :alt "Working..."}]]]]
       (when-not (empty? devotion)
         [:p
          [:a {:href (str "/admin/devotions/delete?slug="
@@ -602,7 +612,8 @@
                           [:input {:type "submit" :name "yes" :value "Yes"}]]]
             [:dd.delForm [:form {:action "/admin/devotions"
                                  :method "get"}
-                          [:input {:type "submit" :name "no" :value "No"}]]]]
+                          [:input {:type "submit" :name "no" :value "No"}]
+                          [:img.spinner {:src "/assets/spinner.gif" :alt "Working..."}]]]]
            admin-footer))
         admin-error))))
 
@@ -650,7 +661,9 @@
         [:dt [:label {:for "body"} "Testimony"]]
         [:dd [:textarea {:name "body" :rows "24" :cols "80"} body]]
         [:dt "&nbsp;"]
-        [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+        [:dd
+         [:input {:type "submit" :name "submit" :value "Submit"}]
+         [:img.spinner {:src "/assets/spinner.gif" :alt "Working..."}]]]]
       (when-not (empty? testimony)
         [:p
          [:a {:href (str "/admin/testimonies/delete?slug="
@@ -704,7 +717,8 @@
                           [:input {:type "submit" :name "yes" :value "Yes"}]]]
             [:dd.delForm [:form {:action "/admin/testimonies"
                                  :method "get"}
-                          [:input {:type "submit" :name "no" :value "No"}]]]]
+                          [:input {:type "submit" :name "no" :value "No"}]
+                          [:img.spinner {:src "/assets/spinner.gif" :alt "Working..."}]]]]
            admin-footer))
         admin-error))))
 
@@ -758,7 +772,9 @@
         [:dt [:label {:for "name"} "Category Name"]]
         [:dd [:input {:type "text" :name "name" :value name}]]
         [:dt "&nbsp;"]
-        [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+        [:dd
+         [:input {:type "submit" :name "submit" :value "Submit"}]
+         [:img.spinner {:src "/assets/spinner.gif" :alt "Working..."}]]]]
       (when-not (empty? category)
         [:div
          [:p
@@ -821,7 +837,8 @@
                           [:input {:type "submit" :name "yes" :value "Yes"}]]]
             [:dd.delForm [:form {:action "/admin/scripture"
                                  :method "get"}
-                          [:input {:type "submit" :name "no" :value "No"}]]]]
+                          [:input {:type "submit" :name "no" :value "No"}]
+                          [:img.spinner {:src "/assets/spinner.gif" :alt "Working..."}]]]]
            admin-footer))
         admin-error))))
 
@@ -844,7 +861,9 @@
         [:dt [:label {:for "text"} "Scripture"]]
         [:dd [:textarea {:name "text" :rows "24" :cols "80"} text]]
         [:dt "&nbsp;"]
-        [:dd [:input {:type "submit" :name "submit" :value "Submit"}]]]]
+        [:dd
+         [:input {:type "submit" :name "submit" :value "Submit"}]
+         [:img.spinner {:src "/assets/spinner.gif" :alt "Working..."}]]]]
       (when-not (empty? scripture)
         [:p
          [:a {:href (str "/admin/scripture/delete?category="
@@ -906,7 +925,8 @@
             [:dd.delForm [:form {:action "/admin/scripture/categories/edit"
                                  :method "get"}
                           [:input {:type "hidden" :name "slug" :value cat-slug}]
-                          [:input {:type "submit" :name "no" :value "No"}]]]]
+                          [:input {:type "submit" :name "no" :value "No"}]
+                          [:img.spinner {:src "/assets/spinner.gif" :alt "Working..."}]]]]
            admin-footer))
         admin-error))))
 

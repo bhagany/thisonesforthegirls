@@ -50,7 +50,9 @@
   (fn
     [response]
     (let [xhr (.-target response)
-          json (.getResponseJson xhr)]
+          json (.getResponseJson xhr)
+          spinner (aget (.getElementsByClassName js/document "spinner") 0)]
+      (style/setStyle spinner "visibility" "hidden")
       (if (< (.getStatus xhr) 300)
         (if (s/ends-with? action "login")
           ;; login processing
@@ -60,7 +62,8 @@
           ;; other form processing
           (if-let [redirect (gobj/get json "redirect")]
             (do
-              (cookies/set "message" (gobj/get json "success") -1 "/admin" nil true)
+              (cookies/set "message" (gobj/get json "success") -1 "/admin"
+                           nil true)
               (set! (.-href (.-location js/window)) redirect))
             (show-success (gobj/get json "success"))))
         ;; general error processing
@@ -90,7 +93,10 @@
                                        (into (path-and-query)))
                         xhr-json (->> {:form form-data}
                                       clj->js
-                                      (.stringify js/JSON))]
+                                      (.stringify js/JSON))
+                        spinner (aget (.getElementsByClassName
+                                       js/document "spinner") 0)]
+                    (style/setStyle spinner "visibility" "visible")
                     (goog.net.XhrIo.send action
                                          (handle-ajax-response action)
                                          "POST"

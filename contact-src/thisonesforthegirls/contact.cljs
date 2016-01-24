@@ -10,7 +10,9 @@
 (defn handle-ajax-response
   [response]
   (let [xhr (.-target response)
-        json (.getResponseJson xhr)]
+        json (.getResponseJson xhr)
+        spinner (aget (.getElementsByClassName js/document "spinner") 0)]
+    (style/setStyle spinner "visibility" "hidden")
     (if (< (.getStatus xhr) 300)
       (let [redirect (gobj/get json "redirect")]
         (cookies/set "contact-message" (gobj/get json "success"))
@@ -32,7 +34,11 @@
                                    (into {}))
                     xhr-json (->> {:form form-data}
                                   clj->js
-                                  (.stringify js/JSON))]
+                                  (.stringify js/JSON))
+                    spinner (aget (.getElementsByClassName
+                                   js/document "spinner")
+                                  0)]
+                (style/setStyle spinner "visibility" "visible")
                 (goog.net.XhrIo.send action
                                      handle-ajax-response
                                      "POST"

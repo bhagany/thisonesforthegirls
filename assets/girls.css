@@ -63,6 +63,14 @@ img.header {
   margin-bottom: 20px;
 }
 
+img.spinner {
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 4px;
+  visibility: hidden;
+}
+
 span.dTitle {
   font-weight: bold;
   font-size: 1.2em;
