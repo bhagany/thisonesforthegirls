@@ -11,6 +11,8 @@
 
 ;; This must be set in your build
 (goog-define admin-page-url "http://your.api.com")
+;; Set to false for dev
+(goog-define secure-admin-cookie true)
 
 (defn path-and-query
   []
@@ -57,13 +59,14 @@
         (if (s/ends-with? action "login")
           ;; login processing
           (do
-            (cookies/set "jwt" (gobj/get json "jwt") -1 "/admin" nil true)
+            (cookies/set "jwt" (gobj/get json "jwt") -1 "/admin"
+                         nil secure-admin-cookie)
             (.reload (.-location js/window)))
           ;; other form processing
           (if-let [redirect (gobj/get json "redirect")]
             (do
               (cookies/set "message" (gobj/get json "success") -1 "/admin"
-                           nil true)
+                           nil secure-admin-cookie)
               (set! (.-href (.-location js/window)) redirect))
             (show-success (gobj/get json "success"))))
         ;; general error processing

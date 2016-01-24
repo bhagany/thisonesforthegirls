@@ -82,7 +82,8 @@
                                    :output-to "out/browser-dev/admin.js"
                                    :output-dir "out/browser-dev/admin"
                                    :asset-path "/assets/js/admin"
-                                   :closure-defines {:thisonesforthegirls.admin.admin_page_url "/lambda-fns/admin-page"}
+                                   :closure-defines {:thisonesforthegirls.admin.admin_page_url "/lambda-fns/admin-page"
+                                                     :thisonesforthegirls.admin.secure_admin_cookie false}
                                    :optimizations :none}}
                        {:id "contact"
                         :source-paths ["contact-src"]
