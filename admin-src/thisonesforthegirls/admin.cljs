@@ -55,12 +55,12 @@
         (if (s/ends-with? action "login")
           ;; login processing
           (do
-            (cookies/set "jwt" (gobj/get json "jwt") -1 "/admin")
+            (cookies/set "jwt" (gobj/get json "jwt") -1 "/admin" nil true)
             (.reload (.-location js/window)))
           ;; other form processing
           (if-let [redirect (gobj/get json "redirect")]
             (do
-              (cookies/set "message" (gobj/get json "success") -1 "/admin")
+              (cookies/set "message" (gobj/get json "success") -1 "/admin" nil true)
               (set! (.-href (.-location js/window)) redirect))
             (show-success (gobj/get json "success"))))
         ;; general error processing
