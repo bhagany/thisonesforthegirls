@@ -40,7 +40,9 @@
               (let [frag (dom/htmlToDocumentFragment
                           (gobj/get (.getResponseJson (.-target response))
                                     "content"))
-                    node (.getElementById js/document "admin")]
+                    node (.getElementById js/document "admin")
+                    spinner (.getElementById js/document "initialSpinner")]
+                (.removeChild node spinner)
                 (.appendChild node frag)
                 (when-let [message (cookies/get "message")]
                   (show-success message)

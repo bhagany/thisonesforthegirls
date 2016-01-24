@@ -79,7 +79,8 @@
   (base-template
    title
    [[:div#admin
-     [:img {:src "/assets/administration.gif" :alt "Administration"}]]]
+     [:img {:src "/assets/administration.gif" :alt "Administration"}]
+     [:img#initialSpinner {:src "/assets/spinner.gif" :alt "Working..."}]]]
    [[:script {:type "text/javascript" :src "/assets/js/admin.js"}]]))
 
 (defn site-template
