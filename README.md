@@ -9,7 +9,7 @@ the site generation happens via AWS Lambda.  Here are some useful things to know
   Requires `secret` parameter
   - `generate-all-pages` does what it says - takes the current information available and generates all pages on the site. Takes no
   parameters.
-  
+
 - Deployments are done with the `deploy` script in the root of this project.  It requires `leiningen` and `boot` to be installed,
 and the shell user to have credentials for AWS.  It will compile the project, upload the Lambda functions to AWS, and the
 static assets to S3. If anything to do with page generation has changed, you'll probably want to run `generate-all-pages`.
@@ -21,3 +21,10 @@ static assets to S3. If anything to do with page generation has changed, you'll 
   - Cloudfront
   - IAM
   - Certificate Manager
+
+## Developement
+
+- There are fake AWS service components that conform to the same protocols as the production versions
+- I use figwheel to autobuild both the backend and frontend code, with `rlwrap lein figwheel lambda-dev admin-dev contact-dev`
+- To run the dev server, `node out/lambda-dev/thisonesforthegirls.js` after figwheel builds the first time
+- Browser access is at localhost:3449
