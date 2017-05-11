@@ -8,7 +8,7 @@
                                                           com.cognitect/transit-cljs]]
                  [funcool/cuerdas "0.6.0"]
                  [hiccups "0.3.0"]
-                 [io.nervous/cljs-lambda "0.1.2"]
+                 [io.nervous/cljs-lambda "0.3.5"]
                  [markdown-clj "0.9.75"]
                  [org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.228"]
@@ -17,7 +17,7 @@
   :plugins [[lein-cljsbuild "1.1.2"]
             [lein-figwheel "0.5.0-4"]
             [lein-npm "0.6.1"]
-            [io.nervous/lein-cljs-lambda "0.2.4"]]
+            [io.nervous/lein-cljs-lambda "0.6.5"]]
 
   :npm {:dependencies [[aws-sdk "2.1.50"]
                        [bcryptjs "2.2.1"]
@@ -32,7 +32,8 @@
 
   :clean-targets ^{:protect false} ["out" "target"]
 
-  :cljs-lambda {:defaults {:role "arn:aws:iam::801085451725:role/thisonesforthegirls-lambda"}
+  :cljs-lambda {:cljs-build-id "lambda"
+                :defaults {:role "arn:aws:iam::801085451725:role/thisonesforthegirls-lambda"}
                 :functions [{:name   "set-admin-creds"
                              :invoke thisonesforthegirls.system/set-admin-creds}
                             {:name   "set-token-secret"
